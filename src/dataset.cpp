@@ -120,7 +120,7 @@ void Dataset::multi_temporal_resolution() {
 // }
 
 int Dataset::getDeltaT(size_t timestep) {
-    if (timestep < stps && !delta_t.empty() && timestep >= 0) {
+    if (timestep < stps && !delta_t.empty()) {
         return delta_t[timestep]; 
     }
     std::cerr << "Error: timestep out of bounds in getDeltaT: " << timestep << std::endl;

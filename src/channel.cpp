@@ -36,8 +36,7 @@ void Channel::ValidateChannelSettings() {
             std::to_string(MAX_TRAVELTIME_HOURS));
     }
 
-    if(this->num_cascaded_reservoirs < 0
-        || this->num_cascaded_reservoirs > MAX_NR_CASCADED_RESERVOIRS) {
+    if(this->num_cascaded_reservoirs > MAX_NR_CASCADED_RESERVOIRS) {
         LOG_ERR("N_CASCADE_LINRES must be between 0 and " 
             + std::to_string(MAX_NR_CASCADED_RESERVOIRS));
     }
@@ -458,7 +457,7 @@ int Channel::WriteNodeOutput(GlobalConfig *gc){
     return 0;
 } 
 //------------------------------------------------------------------------
-double Channel::GetTunnelFLow(size_t t) {
+double Channel::GetTunnelFLow(size_t) {
     printf("ERROR Channel cannot use the function: GetTunnelFLow \n");
     printf("Have you connected a tunnel from a reservoir to a channel? - check input\n");
     printf( "NODE CHANNEL idnr=%d  nodename=%s\n", int(idnr), nodename.c_str()  );

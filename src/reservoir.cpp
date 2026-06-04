@@ -329,7 +329,7 @@ void Reservoir::ValidateReservoirSettings() {
     }
 
 
-    if(this->nr_points_ovefl_curve < 0 || this->nr_points_ovefl_curve > MAX_NR_POINTS_CURVE) {
+    if(this->nr_points_ovefl_curve > MAX_NR_POINTS_CURVE) {
         LOG_WARN("ERROR: Number of points in overflow curve is out of bounds: " + std::to_string(this->nr_points_ovefl_curve));
         LOG_ERR("Reservoir: " + this->nodename);
     }
@@ -365,6 +365,7 @@ void Reservoir::ValidateReservoirSettings() {
 
 // We use this to check if the reservoir level is valid.
 void Reservoir::ValidateReservoirLevelMm3(size_t t, double level_Mm3) {
+    (void)t;
     if(this->use_reservoir_curve) {
         if(level_Mm3 > res_curve_Mm3[nr_points_res_curve-1]) {
             LOG_WARN("ERROR: Numerical instability, there is too much water in your system \n");
@@ -1027,7 +1028,7 @@ int Reservoir::WriteNodeOutput(GlobalConfig *gc){
     return 0;
 }
 /////////////////////////////////////////////////////////////////////////
-double Reservoir::GetTunnelFLow(size_t t) {
+double Reservoir::GetTunnelFLow(size_t) {
     LOG_WARN("ERROR reservoir cannot use this function");
     LOG_ERR("NODE RESERVOIR " + std::to_string(int(idnr)) + " " + nodename);
     return -99.0;

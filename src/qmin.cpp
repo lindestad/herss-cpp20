@@ -32,7 +32,7 @@ SOFTWARE.
 Qmin::Qmin(){}
 Qmin::~Qmin(){}
 
-double Qmin::calcQminRequirement(int year, int month, int day, double *cost) {
+double Qmin::calcQminRequirement(int, int month, int day, double *cost) {
 
     DateTime qmin_startdate;
     DateTime qmin_enddate;

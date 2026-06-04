@@ -81,7 +81,7 @@ Herss::~Herss(){
 /////////////////////////////////////////////////////////////////////
 // This function is used to read the topology file.
 // It is used when we instansiate the herss object from scratch
-void Herss::ReadTopologyFile(string filename) {
+void Herss::ReadTopologyFile(string) {
 
     for(size_t n = 0; n < gc->nr_nodes; n++) {
         rs->nodes[n]->ReadNodeData(gc->topologyfile);

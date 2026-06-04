@@ -174,7 +174,7 @@ bool Xtime::setDate(string str_date) {
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////
-bool Xtime::isValid(std::string &date) {return false;}
+bool Xtime::isValid(std::string&) {return false;}
 
 
 bool Xtime::isValid(int year, int month, int day, int hour, int min, int sec) {
@@ -232,6 +232,5 @@ string Xtime::currentDateTime() {
     return buf; 
 } 
  
-
 
 

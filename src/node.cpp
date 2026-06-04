@@ -84,13 +84,13 @@ Node::Node() {
 Node::~Node() {}
 
 // VIRTUAL FUNCTIONS
-int Node::ReadNodeData(string filename)             { return 0; }
-int Node::ReadStateFile(string filename)            { return 0; }
-int Node::Simulate(size_t t)                        { return 0; }
+int Node::ReadNodeData(string)                      { return 0; }
+int Node::ReadStateFile(string)                     { return 0; }
+int Node::Simulate(size_t)                          { return 0; }
 int Node::initArrayCurves(void)                     { return 0; }
-int Node::CheckWaterBalance(Herss *herss_obj)       { return 0; }
+int Node::CheckWaterBalance(Herss*)                 { return 0; }
 double Node::GetStartWater_Mm3(void)                { return 0; }
 double Node::GetEndWater_Mm3(void)                  { return 0; } 
-int Node::WriteNodeOutput(GlobalConfig *gc )        { return 0; }
-double Node::GetTunnelFLow(size_t t)                { return 0; }
-int Node::WriteStateFile(FILE *fp)                  { return 0; }
+int Node::WriteNodeOutput(GlobalConfig*)            { return 0; }
+double Node::GetTunnelFLow(size_t)                  { return 0; }
+int Node::WriteStateFile(FILE*)                     { return 0; }

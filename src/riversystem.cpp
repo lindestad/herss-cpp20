@@ -208,6 +208,7 @@ double Riversystem::CalcSimulationProfit() {
 }
 //////////////////////////////////////////////////////////////////////
 void Riversystem::PrintEconomicInfo(class Herss *herss_obj) {
+    (void)herss_obj;
 
     // THESE ARE USED FOR DETAILED TIMESTEP PRINT
     //double sum_profit;
@@ -332,9 +333,10 @@ REMEMBER TO ADD THE DOUBLES ABOVE
 //////////////////////////////////////////////////////////////////////
 // Calculate the value function at the END of a specified timestep
 double Riversystem::CalcVF_atEndOfStp(double restprice, size_t stp) {
+    (void)restprice;
 
     // We need to run simulation and CalcVF before this ufunction. 
-    if(stp < 0 || stp > (gc->stps-1)) {
+    if(stp > (gc->stps-1)) {
         printf("ERROR:  stp is out of range.  stp= %lu \n", stp );
         printf("file: %s  linenr: %d  function: %s \n", __FILE__ , __LINE__, __FUNCTION__);
         exit(EXIT_FAILURE);
