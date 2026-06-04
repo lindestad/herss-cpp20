@@ -14,6 +14,7 @@ Copyright (c) <2024> <Å Energi, Bernt Viggo Matheussen>
 //-----------------------------------------------------------------------
 Channel::Channel(){
     this->K_traveltime_hours   = NOT_INIT;
+    this->num_cascaded_reservoirs = 1;
     this->decay                = NOT_INIT;
     this->casc_reservoirs      = nullptr;
 
@@ -46,6 +47,9 @@ void Channel::ValidateChannelSettings() {
 
     // We allocate memory to the cascaded reservoirs if we have not done it already.
     if(this->casc_reservoirs == nullptr) {
+        if(this->initial_storage_linres_Mm3.empty()) {
+            this->initial_storage_linres_Mm3.assign(this->num_cascaded_reservoirs, 0.0);
+        }
         this->casc_reservoirs = 
         new CascadedReservoirs(this->K_traveltime_hours, this->num_cascaded_reservoirs);
         // Transfer initial conditions to the cascaded linear reservoirs.
@@ -216,23 +220,22 @@ int Channel::ReadNodeData(string filename) {
                         break;
                     }
 
-                    if(keyword2.compare("TRAVELTIME") == 0 ) {
-                        string outstr = string("TRAVELTIME is not in use anymore, ") +
-                            "it has been replaced by TRAVELTIME_HOURS." +
-                            "Please check your topology file " + filename;
-                        
-                        LOG_WARN("Channel::ReadNodeData  nodename: " + nodename + ", idnr: " + std::to_string(idnr) + ", nodetype: " + EnumToString(nodetype));
+                    if(keyword2.compare("NODE") == 0) {
+                        found_keyword = true;
+                        inside_node = false;
+                        break;
+                    }
 
-                        LOG_ERR(outstr);
+                    if(keyword2.compare("TRAVELTIME") == 0 ) {
+                        found_keyword = true;
+                        this->K_traveltime_hours = atof(value2.c_str());
+                        LOG_WARN("TRAVELTIME is deprecated; treating it as K_TRAVELTIME_HOURS for channel " + nodename);
                     }
 
                     if(keyword2.compare("DECAY") == 0) {
-                        string outstr = string("DECAY is not in use anymore, ") +
-                            "it has been replaced by TRAVELTIME_HOURS." +
-                            "Please check your topology file " + filename;
-
-                        LOG_WARN("Channel::ReadNodeData  nodename: " + nodename + ", idnr: " + std::to_string(idnr) + ", nodetype: " + EnumToString(nodetype));
-                        LOG_ERR(outstr);
+                        found_keyword = true;
+                        this->decay = atof(value2.c_str());
+                        LOG_WARN("DECAY is deprecated and ignored by the cascaded reservoir channel model for channel " + nodename);
                     }
 
                     if(keyword2.compare("K_TRAVELTIME_HOURS") == 0 ) {
@@ -293,6 +296,12 @@ int Channel::ReadNodeData(string filename) {
 ////////////////////////////////////////////////////////////////////////////
 int Channel::SetStartState(void) {
 
+    if(this->casc_reservoirs == nullptr) {
+        ValidateChannelSettings();
+    }
+    if(this->initial_storage_linres_Mm3.empty()) {
+        this->initial_storage_linres_Mm3.assign(this->num_cascaded_reservoirs, 0.0);
+    }
     this->casc_reservoirs->setInitialStorage(this->initial_storage_linres_Mm3);
 
     for(size_t t = 0; t < S->stps; t++ ) {

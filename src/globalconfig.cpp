@@ -421,6 +421,12 @@ void GlobalConfig::readGlobalFile() {
                 found_ok_keyword = true;
             }
 
+            if (keyword.compare("OUTPUTFILE") == 0) {
+                this->outputfile = value;
+                this->found_outputfilename = true;
+                found_ok_keyword = true;
+            }
+
             if (keyword.compare("DT") == 0) {
                 LOG_INFO("------------------------------------------------------------");
                 LOG_INFO("HERSS MESSAGE:");

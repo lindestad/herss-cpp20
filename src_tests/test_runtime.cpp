@@ -4,6 +4,7 @@
 // similar to invoking:  ./herss.exe ./global.txt
 
 #include <gtest/gtest.h>
+#include "test_paths.h"
 #include <chrono>
 #include <vector>
 #include <numeric>
@@ -16,8 +17,8 @@
 TEST(PerformanceTestFullProgram, Utahps_FullProgramAverageRuntimeUnder350ms) {
     using clock = std::chrono::steady_clock;
 
-    const std::string kExePath = "./herss.exe"; 
-    const std::string kGlobalPath = "../src_tests/utahps_test/global.txt"; 
+    const std::string kExePath = herssTestExecutablePath(); 
+    const std::string kGlobalPath = herssTestDataPath("global.txt"); 
     const int kNRuns = 10; 
     const double kMaxAvgSeconds = 0.75; 
 

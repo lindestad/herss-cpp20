@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include "test_paths.h"
 #include "herss.h"
 #include <string>
 

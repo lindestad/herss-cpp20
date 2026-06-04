@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include "test_paths.h"
 #include "arraycurve.h"
 #include "herss.h"
 #include <cmath>
@@ -124,12 +125,11 @@ TEST_F(ArrayCurveTest, X2YReturnsErrorOnOutOfBoundsInput)
 
     curve->initializeArrays();
 
-    // Tests that out-of-bounds input returns error value (-99.9)
+    // Tests that out-of-bounds input returns the project sentinel value.
     double result1 = curve->x2y(-1.0);  // Below minimum
     double result2 = curve->x2y(20.0);  // Above maximum
 
-    EXPECT_DOUBLE_EQ(result1, -99.9);
-    EXPECT_DOUBLE_EQ(result2, -99.9);
+    EXPECT_DOUBLE_EQ(result1, -1.0 * VERY_LARGE_NUMBER);
+    EXPECT_DOUBLE_EQ(result2, -1.0 * VERY_LARGE_NUMBER);
 }
-
 

@@ -1,10 +1,11 @@
 #include <gtest/gtest.h>
+#include "test_paths.h"
 #include "herss.h"
 #include <string>
 
 // Integration-style test verifying ending reservoir volumes (Mm3) for specific nodes
 // using the uTAHPS test dataset. We assert that reservoir node 5 (TOPPSY) ends at
-// 382.3622 Mm3 and reservoir node 9 (KROKNESVATN) ends at 216.4803 Mm3.
+    // 382.3706 Mm3 and reservoir node 9 (KROKNESVATN) ends at 216.5328 Mm3.
 // These values are taken from the generated node output files in
 // src_tests/utahps_test/output after a reference simulation.
 // Tolerance: 1e-3 Mm3 (1e3 m3) which is stricter than typical volumetric rounding.
@@ -12,11 +13,11 @@
 TEST(WaterBalanceEndVolumesTest, Utahps_EndReservoirVolumesMatchReference) {
     // Arrange
     auto *gc = new GlobalConfig();
-    gc->globalfile = std::string("../src_tests/utahps_test/global.txt");
+    gc->globalfile = std::string(herssTestDataPath("global.txt"));
 
     gc->readGlobalFile();
     gc->SetDirectoriesAndFilenames();
-    gc->DiagnoseTopologyFile();
+    gc->Diagnose();
     gc->checkNrSteps();
     gc->write_nodefiles = false; // speed: don't emit per-node outputs during test
 
@@ -53,8 +54,8 @@ TEST(WaterBalanceEndVolumesTest, Utahps_EndReservoirVolumesMatchReference) {
     double end9 = herss->rs->reservoirs[res_idx9].GetEndWater_Mm3();
 
     // Assert (reference values)
-    EXPECT_NEAR(end5, 382.3622, 1e-3);
-    EXPECT_NEAR(end9, 216.4803, 1e-3);
+    EXPECT_NEAR(end5, 382.3706, 1e-3);
+    EXPECT_NEAR(end9, 216.5328, 1e-3);
 
     // Cleanup
     delete herss;

@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
+#include "test_paths.h"
 #include "herss.h"
+#include <cmath>
 #include <vector>
 #include <memory>
 
@@ -45,45 +47,53 @@ protected:
     }
 };
 
-TEST_F(ChannelTest, TraveltimeZero_RoutesUpInflowDirectly_NoStorage) {
-    gc = makeGC(3,1);
+static void configureRouting(Channel* ch, double travel_time_hours, size_t reservoirs)
+{
+    ch->K_traveltime_hours = travel_time_hours;
+    ch->num_cascaded_reservoirs = reservoirs;
+    ch->initial_storage_linres_Mm3.assign(reservoirs, 0.0);
+    ch->decay = 1.0;
+    ch->nodetype = CHANNEL;
+    ch->ValidateChannelSettings();
+}
+
+TEST_F(ChannelTest, OneHourRouting_StoresAndReleasesExpectedWater) {
+    gc = makeGC(1,1);
     rs = new Riversystem(gc);
     auto* ch = static_cast<Channel*>(rs->nodes[0]);
     attachScenario(ch, gc->stps, gc->dt);
-    ch->traveltime = 0; ch->decay = 1.0; ch->nodetype = CHANNEL;
+    configureRouting(ch, 1.0, 1);
 
-    // Provide upstream inflow sequence (treated as arriving each step)
-    ch->S->up_inflow[0]=2.0; ch->S->up_inflow[1]=3.0; ch->S->up_inflow[2]=0.5; // m3/s
+    ch->S->up_inflow[0]=2.0; // m3/s
 
-    for(size_t t=0;t<gc->stps;++t) {
-        ch->Simulate(t);
-    }
-    // Expect direct passthrough
-    EXPECT_DOUBLE_EQ(ch->S->tot_outflow[0], 2.0);
-    EXPECT_DOUBLE_EQ(ch->S->tot_outflow[1], 3.0);
-    EXPECT_DOUBLE_EQ(ch->S->tot_outflow[2], 0.5);
-    for(size_t t=0;t<gc->stps;++t) EXPECT_DOUBLE_EQ(ch->S->channel_storage_Mm3[t], 0.0);
+    ch->Simulate(0);
+
+    const double factor = std::exp(-1.0);
+    const double expected_storage_m3 = 3600.0 * (1.0 - factor) * 2.0;
+    const double expected_outflow_m3s = ((2.0 * 3600.0) - expected_storage_m3) / 3600.0;
+
+    EXPECT_NEAR(ch->S->tot_outflow[0], expected_outflow_m3s, 1e-12);
+    EXPECT_NEAR(ch->S->channel_storage_Mm3[0], expected_storage_m3 / 1e6, 1e-12);
 }
 
-TEST_F(ChannelTest, TraveltimeTwo_WithDecay_UpdatesStorageAndOutflow) {
+TEST_F(ChannelTest, CascadedRouting_UpdatesStorageAndOutflow) {
     gc = makeGC(4,1);
     rs = new Riversystem(gc);
     auto* ch = static_cast<Channel*>(rs->nodes[0]);
     attachScenario(ch, gc->stps, gc->dt);
-    ch->traveltime = 2; ch->decay = 0.9; ch->nodetype=CHANNEL;
-    ch->waterflow_m3[0]=0.0; ch->waterflow_m3[1]=0.0;
+    configureRouting(ch, 2.0, 2);
 
     // Constant upstream inflow 10 m3/s
     for(size_t t=0;t<gc->stps;++t) ch->S->up_inflow[t]=10.0;
 
     for(size_t t=0;t<gc->stps;++t) ch->Simulate(t);
 
-    // Outflow lags by traveltime steps. With traveltime=2 we expect:
-    EXPECT_NEAR(ch->S->tot_outflow[0], 0.0, 1e-12); // no water yet
-    EXPECT_NEAR(ch->S->tot_outflow[1], 0.0, 1e-12); // still filling second slot
-    EXPECT_GT(ch->S->tot_outflow[2], 0.0);          // water from slot 1 appears
+    EXPECT_GT(ch->S->tot_outflow[0], 0.0);
+    EXPECT_LT(ch->S->tot_outflow[0], 10.0);
+    EXPECT_GT(ch->S->tot_outflow[1], ch->S->tot_outflow[0]);
+    EXPECT_GT(ch->S->tot_outflow[2], ch->S->tot_outflow[1]);
     EXPECT_GT(ch->S->channel_storage_Mm3[0], 0.0);
-    EXPECT_GT(ch->S->channel_storage_Mm3[1], 0.0);
+    EXPECT_GT(ch->S->channel_storage_Mm3[1], ch->S->channel_storage_Mm3[0]);
 }
 
 TEST_F(ChannelTest, RemainingVolumes_SetFromStorageAndNotNegative) {
@@ -91,7 +101,7 @@ TEST_F(ChannelTest, RemainingVolumes_SetFromStorageAndNotNegative) {
     rs = new Riversystem(gc);
     auto* ch = static_cast<Channel*>(rs->nodes[0]);
     attachScenario(ch, gc->stps, gc->dt);
-    ch->traveltime=1; ch->decay=1.0; ch->waterflow_m3[0]=0.0; ch->nodetype=CHANNEL;
+    configureRouting(ch, 1.0, 1);
 
     ch->S->up_inflow[0]=5.0; ch->Simulate(0);
     EXPECT_GE(ch->remaining_Mm3, 0.0);
@@ -103,7 +113,7 @@ TEST_F(ChannelTest, QminPenalty_AppliedWhenOutflowBelowRequirement) {
     rs = new Riversystem(gc);
     auto* ch = static_cast<Channel*>(rs->nodes[0]);
     attachScenario(ch, gc->stps, gc->dt);
-    ch->traveltime=0; ch->decay=1.0; ch->nodetype=CHANNEL;
+    configureRouting(ch, 1.0, 1);
 
     // Configure a single Qmin period requiring 3 m3/s with penalty 100 Euro/h
     ch->qmin.nr_periods = 1; ch->qmin_in_use = true;
@@ -111,7 +121,7 @@ TEST_F(ChannelTest, QminPenalty_AppliedWhenOutflowBelowRequirement) {
     ch->qmin.timeperiods[0].end_day=31; ch->qmin.timeperiods[0].end_month=12;
     ch->qmin.timeperiods[0].min_discharge=3.0; ch->qmin.timeperiods[0].penalty_cost=100.0;
 
-    // Provide small inflow (1 m3/s) so outflow=1 < 3
+    // Provide small inflow so routed outflow remains below 3 m3/s
     ch->S->up_inflow[0]=1.0;
     ch->Simulate(0);
     // cost_qmin = penalty_cost * dt/3600 = 100 * 3600/3600 = 100
@@ -124,20 +134,19 @@ TEST_F(ChannelTest, WaterBalance_ConservationWithinTolerance) {
     rs = new Riversystem(gc);
     auto* ch = static_cast<Channel*>(rs->nodes[0]);
     attachScenario(ch, gc->stps, gc->dt);
-    ch->traveltime=2; ch->decay=1.0; ch->nodetype=CHANNEL;
-    ch->waterflow_m3[0]=0.0; ch->waterflow_m3[1]=0.0;
+    configureRouting(ch, 2.0, 2);
 
     ch->S->up_inflow[0]=4.0; ch->S->up_inflow[1]=0.0; ch->S->up_inflow[2]=0.0;
     for(size_t t=0;t<gc->stps;++t) ch->Simulate(t);
 
     // Manual water balance: starting + inflow - ending - outflow = 0 within tolerance.
     double start_storage = 0.0; // initial waterflow_m3 sum
-    double end_storage= ch->waterflow_m3[0]+ch->waterflow_m3[1];
+    double end_storage = ch->S->channel_storage_Mm3[gc->stps - 1];
     // Inflow volume: only step 0 contributes (4 m3/s * 3600 s)/1e6 Mm3
     double inflow_Mm3 = (4.0 * 3600.0)/1e6;
     // Outflow volume: sum tot_outflow * dt
     double outflow_Mm3=0.0;
     for(size_t t=0;t<gc->stps;++t) outflow_Mm3 += ch->S->tot_outflow[t]*3600.0/1e6;
-    double balance = (start_storage/1e6) + inflow_Mm3 - (end_storage/1e6) - outflow_Mm3;
+    double balance = (start_storage/1e6) + inflow_Mm3 - end_storage - outflow_Mm3;
     EXPECT_NEAR(balance, 0.0, 1e-6);
 }

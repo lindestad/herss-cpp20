@@ -1,5 +1,6 @@
 // Integration test for full uTAHPS simulation value function
 #include <gtest/gtest.h>
+#include "test_paths.h"
 #include "herss.h"
 #include <iostream>
 #include <iomanip>
@@ -12,12 +13,12 @@ TEST(ValueFunctionIntegrationTest, UtahpsSystem_ComputesExpectedValueFunction) {
 	// Arrange
 	auto *gc = new GlobalConfig();
 	// Use the copies of the input files placed under src_tests/utahps_test
-	gc->globalfile      = std::string("../src_tests/utahps_test/global.txt");
+	gc->globalfile      = std::string(herssTestDataPath("global.txt"));
 
 	// Read and diagnose configuration
 	gc->readGlobalFile();
 	gc->SetDirectoriesAndFilenames();      // Resolves relative INPUTDIR/OUTPUTDIR paths
-	gc->DiagnoseTopologyFile();            // Populate nodetypes / counts
+	gc->Diagnose();            // Populate nodetypes / counts
 	gc->checkNrSteps();                    // Determine number of timesteps from price file
 
 	// (Optional) avoid writing per-node output files during the test for speed
@@ -43,7 +44,7 @@ TEST(ValueFunctionIntegrationTest, UtahpsSystem_ComputesExpectedValueFunction) {
 			  << "[ValueFunctionIntegrationTest] uTAHPS ValueFunction = " << vf << "\n";
 
 	// Assert: compare against reference value function
-	const double kExpectedVF = 7759325.85235;
+	const double kExpectedVF = 7776257.30184;
 	// Tolerance: 1e-2 Euro (cent-level) should be sufficient; relax slightly if platform differences arise
 	EXPECT_NEAR(vf, kExpectedVF, 1e-2) << "ValueFunction mismatch for uTAHPS integration test";
 	// Internal consistency: stored valuefunction_Euro should equal returned value

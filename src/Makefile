@@ -74,10 +74,11 @@ $(BIN): $(OBJ)
 $(LIB): $(OBJ)
 	$(CC) -shared -o ${LIB} ${OBJ}
 
-# TEST TARTGET
-test: $(TEST_OBJ) gtest_main.o gtest-all.o
-	$(CC) $(TEST_CFLAGS) -o test_runner $^ -lpthread
-	./test_runner --gtest_color=yes --gtest_brief=1
+# TEST TARGET
+test:
+	cmake -S .. -B ../build -G Ninja
+	cmake --build ../build --target herss_tests
+	ctest --test-dir ../build --output-on-failure
 
 gtest_main.a: gtest-all.o
 	ar -rv gtest_main.a gtest-all.o
@@ -144,4 +145,3 @@ logger.o: logger.cpp herss.h
 
 cascadedreservoirs.o: cascadedreservoirs.cpp herss.h logger.h
 	$(CC) $(CFLAGS) -c cascadedreservoirs.cpp -o cascadedreservoirs.o
-

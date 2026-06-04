@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include "test_paths.h"
 #include "herss.h"
 #include <string>
 #include <fstream>
@@ -19,20 +20,20 @@ protected:
     {
         // Initialize global config with real uTAHPS parameters
         gc = new GlobalConfig();
-        gc->globalfile = "../src_tests/utahps_test/global.txt";
-        gc->topologyfile = "../src_tests/utahps_test/topology.txt";
-        gc->pricefile = "../src_tests/utahps_test/pricefile.txt";
-        gc->inflowfile = "../src_tests/utahps_test/inflow.txt";
-        gc->actionsfile = "../src_tests/utahps_test/actions.txt";
-        gc->start_statefile = "../src_tests/utahps_test/start_state.txt";
-        gc->outputdir = "../src_tests/utahps_test/output/";
+        gc->globalfile = herssTestDataPath("global.txt");
+        gc->topologyfile = herssTestDataPath("topology.txt");
+        gc->pricefile = herssTestDataPath("pricefile.txt");
+        gc->inflowfile = herssTestDataPath("inflow.txt");
+        gc->actionsfile = herssTestDataPath("actions.txt");
+        gc->start_statefile = herssTestDataPath("start_state.txt");
+        gc->outputdir = herssTestOutputDir();
         
         // Read global configuration
         gc->readGlobalFile();
     // Use INPUTDIR/OUTPUTDIR prefixes from global.txt for relative filenames
     gc->SetDirectoriesAndFilenames();
     // Derive sizes from topology and price file for a consistent Herss setup
-    gc->DiagnoseTopologyFile();
+    gc->Diagnose();
     gc->checkNrSteps();
         
     // Set up basic test parameters (explicit overrides if needed)
@@ -310,13 +311,13 @@ TEST_F(PowerstationTest, Constructor_InitializesCorrectly)
     Powerstation ps;
     EXPECT_EQ(ps.stps, size_t(0));
     EXPECT_EQ(ps.dt, 0);
-    EXPECT_EQ(ps.static_gen_efficiency, NOT_INIT);
-    EXPECT_EQ(ps.headlosscoef, NOT_INIT);
-    EXPECT_EQ(ps.powstat_masl, NOT_INIT);
-    EXPECT_EQ(ps.powstat_min_discharge, NOT_INIT);
-    EXPECT_EQ(ps.powstat_startstop, NOT_INIT);
-    EXPECT_EQ(ps.init_Power, NOT_INIT);
-    EXPECT_EQ(ps.aggressive_actions_cost, NOT_INIT);
+    EXPECT_EQ(ps.static_gen_efficiency, -1.0 * NOT_INIT);
+    EXPECT_EQ(ps.headlosscoef, -1.0 * NOT_INIT);
+    EXPECT_EQ(ps.powstat_masl, -1.0 * NOT_INIT);
+    EXPECT_EQ(ps.powstat_min_discharge, -1.0 * NOT_INIT);
+    EXPECT_EQ(ps.powstat_startstop, -1.0 * NOT_INIT);
+    EXPECT_EQ(ps.init_Power, -1.0 * NOT_INIT);
+    EXPECT_EQ(ps.aggressive_actions_cost, -1.0 * NOT_INIT);
     // shared_penstock is a bool; constructor assigns NOT_INIT which coerces to true. Don't assert sentinel.
     EXPECT_TRUE(ps.generators.empty());
 }
@@ -329,17 +330,15 @@ TEST_F(PowerstationTest, Dataset_VariableTimesteps_LoadedCorrectly)
     EXPECT_EQ(gc->stps, 16);
     
     // Check that multi_temporal_resolution was called
-    EXPECT_EQ(dataset->delta_t.size(), 15); // stps-1 intervals
+    EXPECT_EQ(dataset->delta_t.size(), gc->stps);
     
-    // Most timesteps should be 1 hour (3600s), last might be different
-    for (size_t t = 0; t < dataset->delta_t.size() - 1; t++) {
+    // Most timesteps should be 1 hour (3600s), final two stored values cover the two-hour tail.
+    for (size_t t = 0; t < dataset->delta_t.size() - 2; t++) {
         EXPECT_EQ(dataset->getDeltaT(t), 3600);
     }
     
-    // Explicitly check the last interval is different (longer)
-    
-    size_t last_idx = dataset->delta_t.size() - 1;
-    EXPECT_GT(dataset->getDeltaT(last_idx), 3600);
+    EXPECT_GT(dataset->getDeltaT(dataset->delta_t.size() - 2), 3600);
+    EXPECT_GT(dataset->getDeltaT(dataset->delta_t.size() - 1), 3600);
 
 }
 

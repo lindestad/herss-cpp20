@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include "test_paths.h"
 #include "herss.h"
 #include <string>
 #include <fstream>
@@ -15,12 +16,14 @@ protected:
     { 
         gc = new GlobalConfig();
         // Set up basic configuration for testing
-        gc->stps = 16;
-        gc->nr_nodes = 12;
-        gc->pricefile = "../src_tests/utahps_test/pricefile.txt";
-        gc->inflowfile = "../src_tests/utahps_test/inflow.txt";
-        gc->actionsfile = "../src_tests/utahps_test/actions.txt";
+        gc->topologyfile = herssTestDataPath("topology.txt");
+        gc->pricefile = herssTestDataPath("pricefile.txt");
+        gc->inflowfile = herssTestDataPath("inflow.txt");
+        gc->actionsfile = herssTestDataPath("actions.txt");
         gc->dt_last = 3600;
+        gc->Diagnose();
+        gc->checkNrSteps();
+        ASSERT_EQ(gc->n_action_nodes_from_topology, 4u);
         
         dataset = new Dataset(gc);
     }
@@ -115,13 +118,14 @@ TEST_F(DatasetTest, MultiTemporalResolutionCalculatesDeltaT)
     dataset->readPricefile();
     dataset->multi_temporal_resolution();
     
-    // Check that delta_t vector has the correct size (stps - 1)
-    EXPECT_EQ(dataset->delta_t.size(), dataset->stps - 1);
+    // The implementation stores one delta per timestep, including the final step.
+    EXPECT_EQ(dataset->delta_t.size(), dataset->stps);
     
-    // For hourly data, each delta_t should be 3600 seconds (1 hour)
-    for(size_t i = 0; i < dataset->delta_t.size() - 1; i++) {
-    EXPECT_EQ(dataset->delta_t[i], 3600);
+    // The fixture is hourly until the last two recorded timesteps, which are two hours apart.
+    for(size_t i = 0; i < dataset->delta_t.size() - 2; i++) {
+        EXPECT_EQ(dataset->delta_t[i], 3600);
     }
+    EXPECT_EQ(dataset->delta_t[dataset->delta_t.size() - 2], 7200);
     EXPECT_EQ(dataset->delta_t.back(), 7200);
 }
 
@@ -132,12 +136,13 @@ TEST_F(DatasetTest, MultiTemporalResolutionHandlesLastTwoHourStep)
     dataset->multi_temporal_resolution();
 
     // Check that delta_t vector has the correct size
-    EXPECT_EQ(dataset->delta_t.size(), dataset->stps - 1);
+    EXPECT_EQ(dataset->delta_t.size(), dataset->stps);
 
-    // All intervals except the last should be 3600
-    for(size_t i = 0; i < dataset->delta_t.size() - 1; i++) {
+    // All intervals except the final two stored values should be 3600.
+    for(size_t i = 0; i < dataset->delta_t.size() - 2; i++) {
         EXPECT_EQ(dataset->delta_t[i], 3600);
     }
+    EXPECT_EQ(dataset->delta_t[dataset->delta_t.size() - 2], 7200);
     EXPECT_EQ(dataset->delta_t.back(), 7200);
 }
 
@@ -186,4 +191,3 @@ TEST_F(DatasetTest, DateValidationWorksCorrectly)
     // If we get here without exit, the dates matched correctly
     SUCCEED();
 }
-

@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include "test_paths.h"
 #include "herss.h"
 #include <vector>
 
@@ -23,12 +24,13 @@ protected:
         res.res_curve_masl[2] = 120.0; res.res_curve_Mm3[2] = 25.0;
 
     // Overflow curve: start at LRW (100 masl) and extend beyond HRW to avoid edge issues
-    res.nr_points_ovefl_curve = 3;
-    res.ovefl_curve_masl[0] = 100.0; res.ovefl_curve_m3s[0] = 2.0;   // m3/s
-    res.ovefl_curve_masl[1] = 110.0; res.ovefl_curve_m3s[1] = 8.0;
-    res.ovefl_curve_masl[2] = 130.0; res.ovefl_curve_m3s[2] = 20.0;
+        res.nr_points_ovefl_curve = 3;
+        res.ovefl_curve_masl[0] = 100.0; res.ovefl_curve_m3s[0] = 2.0;   // m3/s
+        res.ovefl_curve_masl[1] = 110.0; res.ovefl_curve_m3s[1] = 8.0;
+        res.ovefl_curve_masl[2] = 130.0; res.ovefl_curve_m3s[2] = 20.0;
 
         // Levels and penalties
+        res.use_reservoir_curve = true;
         res.res_LRW = 100.0;
         res.res_HRW = 120.0;
         res.res_penalty = 10.0;
