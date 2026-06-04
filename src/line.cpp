@@ -41,13 +41,13 @@ string Line::extractNextElementFromLine(string* line)
 	string result =  line->substr(0,tmp);			// Extract element
 	
 	size_t dummy = line->find_first_not_of(DELIMITER, tmp);
-	(void)dummy;  // Just to void warning related to return value of find_first_not_of
+	(void)dummy;  // Avoid warning related to return value of find_first_not_of
 
 	line->erase(0, tmp);					// Erase element and whitespace
 	return result;
 }
 ////////////////////////////////////////////////////////////////////
-// Calculates number of coloumns in line
+// Calculates number of columns in line
 int Line::calcNrCols(string* line)
 {
 	int cols;

@@ -60,8 +60,8 @@ GlobalConfig::GlobalConfig(){
         actions_idnrs[n] = NOT_INIT;
         inflows_idnrs[n] = NOT_INIT;
     } 
-    this->n_action_nodes = NOT_INIT;  // Will make crash if not reset proparly, this is intentionaly   :)
-    this->n_inflow_nodes = NOT_INIT;  // Will make crash if not reset proparly  :)
+    this->n_action_nodes = NOT_INIT;  // Will crash if not reset properly, this is intentional.
+    this->n_inflow_nodes = NOT_INIT;  // Will crash if not reset properly.
 
 
 }
@@ -285,7 +285,7 @@ void GlobalConfig::Diagnose() {
     string tmpline = line;
     this->n_action_nodes = line_obj.calcNrCols(&tmpline);
 
-    // Now we read in the idnrs for each coloumn and save it. 
+    // Now we read in the idnrs for each column and save it.
     for(size_t c = 0; c < this->n_action_nodes; c++) {
         value = line_obj.extractNextElementFromLine(&line);
         actions_idnrs[c] = stoi(value);
@@ -327,7 +327,7 @@ void GlobalConfig::Diagnose() {
         LOG_ERR("Please revisit input");
     }
 
-    // Now we read in the idnrs for each coloumn and save it. 
+    // Now we read in the idnrs for each column and save it.
     for(size_t c = 0; c < this->n_inflow_nodes; c++) {
         value = line_obj.extractNextElementFromLine(&line);
         inflows_idnrs[c] = stoi(value);

@@ -248,7 +248,7 @@ void Dataset::readInflowFile() {
         string tmpline = line;
         active_nodes = line_obj.calcNrCols(&tmpline);
 
-        // We have scipped the first column already 
+        // We have skipped the first column already.
         if(active_nodes != (gc->nr_reservoirs)) {
             LOG_INFO("There is an error in the inflowfile " + gc->inflowfile);
             LOG_INFO("Please revisit input. ");
@@ -256,7 +256,7 @@ void Dataset::readInflowFile() {
             LOG_ERR("There is an error in the inflowfile " + gc->inflowfile + " please revisit input. Number of columns should be number of reservoirs + 1 (date column).");
         }
 
-        // Now we read in the idnrs for each coloumn and save it. 
+        // Now we read in the idnrs for each column and save it.
         for(size_t c = 0; c < active_nodes; c++) {
             value = line_obj.extractNextElementFromLine(&line);
             int tmp_idnr = stoi(value);

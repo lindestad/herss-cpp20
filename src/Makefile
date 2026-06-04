@@ -44,7 +44,7 @@ NO_LOG ?= 0
 # Compile for testing and debugging. 
 CFLAGS = $(INCS) -Wall -O3 -pedantic -fPIC -march=native
 
-# These should be tested at some point. But needs proper testing to make sure numerical issues dont polute simulation results. 
+# These should be tested at some point. But needs proper testing to make sure numerical issues do not pollute simulation results.
 # -flto — link-time optimization, can give 5–15% by inlining across translation units
 # -ffast-math — allows unsafe float reordering, often 10–30% on numeric code (but check results for correctness)
 

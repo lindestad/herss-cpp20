@@ -405,7 +405,7 @@ double Riversystem::CalcVF(double restprice) {
     tot_active_remaining_Mm3   = nodes[nr_nodes-1]->upstream_remaining_active_Mm3;  // Bottom node is the most downstream node.
     tot_remaining_Mm3          = nodes[nr_nodes-1]->upstream_remaining_Mm3;
 
-    sum_total_MWh = 0.0;    // Production pluss remaining in whole riversystem
+    sum_total_MWh = 0.0;    // Production plus remaining in whole riversystem
 
     // At the most downstream node (OCEAN) the total available water 
     // is the node available water + upstream available (not included DEAD WATER)

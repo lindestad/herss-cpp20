@@ -5,19 +5,19 @@ Date: 11.08.2025
 ########################################################################################################################
 
 ------------------------------------------------------- PURPOSE --------------------------------------------------------
-The purpose of the testing suite is ensuring that future changes to HERSS does not impact the general functionality,
+The purpose of the testing suite is ensuring that future changes to HERSS do not impact the general functionality,
 correctness and simulation time. Multiple source components are tested in addition to waterbalance, value function
 and simulation time.
 
 ----------------------------------------------------- HOW TO USE -------------------------------------------------------
-The test is ran from the src folder by "make test". The test requires the testing scripts and utahps_test to be included
-in the src_tests. In total, 95 tests from 11 test suites is created.
+The test is run from the src folder by "make test". The test requires the testing scripts and utahps_test to be included
+in the src_tests. In total, 98 tests are created.
 
 -------------------------------------------------- COMPONENT TESTS -----------------------------------------------------
 Below is a quick explanation of the tests implemented for each component. Other minor tests may be implemented without
-being mentioned here (ex. constructor/deconstructor tests). 
+being mentioned here (ex. constructor/destructor tests).
 
-The tests checks the correctness of:
+The tests check the correctness of:
 
 # arraycurve.cpp
 - Maximum/Minimum values of curves
@@ -27,18 +27,18 @@ The tests checks the correctness of:
 
 # channel.cpp
 - Traveltime = 0
-- Travel time handeling
+- Travel time handling
 - Penalty application
 - Water balance
 
 # dataset.cpp
 - Read price/inflow/actions
 - Multi_temporal_resolution
-- Handeling of input data
+- Handling of input data
 
 # globalconfig.cpp
 - Initialization of members
-- Error handelig of non-existing files
+- Error handling of non-existing files
 - nr. of steps
 
 # line.cpp
@@ -56,7 +56,7 @@ The tests checks the correctness of:
 - Waterbalance
 - Tunnelflow
 - Qmin
-- Aggresive action
+- Aggressive action
 - Negative action
 - Income/profit calculation
 - Minimum discharge
@@ -66,7 +66,7 @@ The tests checks the correctness of:
 # reservoir.cpp
 - Reservoir volume over time
 - Overflow
-- General performace test
+- General performance test
 
 # Valuefunction test
 - Simulation of utahps_test to ensure src changes does not impact the valuefunction 
@@ -75,4 +75,4 @@ The tests checks the correctness of:
 - Checks two reservoirs to ensure changes in src does not impact the method used to calculate water volume in the reservoirs
 
 # Runtime test
-- Runs utahps_test 30 times to check that the average simulation time does not exceed 0.3 secounds
+- Runs utahps_test 30 times to check that the average simulation time does not exceed 0.3 seconds

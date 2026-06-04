@@ -55,7 +55,7 @@ const string VERSION_DATE = "20260604";
 
 // Maximum number of nodes allowed. // to save coding
 #define MAX_NR_NODES 30
-// Maximum number of coloumns (words or tokens) in one line
+// Maximum number of columns (words or tokens) in one line
 #define MAX_WORDS 200
 
 // To make initialisation of array easier. 
@@ -144,8 +144,8 @@ inline double smooth_min(double a, double b) {
 
 
 
-// This is the naming convention that needs to be used inside the topolgy file 
-// In earlyer version we used POWERSTATION, this has now changed to PSTATION 
+// This is the naming convention that needs to be used inside the topology file
+// In earlier versions we used POWERSTATION, this has now changed to PSTATION
 // We make it more consistent with class names. 
 enum NodeType
 {
@@ -237,7 +237,7 @@ public:
 
 private:
     struct tm my_tm;
-    time_t epoch;       /* Essentialy a pointer to an integer value holding EPOCH seconds.
+    time_t epoch;       /* Essentially a pointer to an integer value holding EPOCH seconds.
                             After 2038 this may be a problem. */
     
     static int isLeapYear(int);
@@ -246,7 +246,7 @@ private:
 
 // Simple time class
 // See Kernighan and Ritchie page 298, ISBN 82-518-2705-1, Norwegian edition. 
-// Note that this may be effected by the Y2038 problem. 
+// Note that this may be affected by the Y2038 problem.
 class DateTime {
 public:
     DateTime(){};
@@ -266,7 +266,7 @@ public:
 
 private:
     struct tm mytm;
-    time_t epoch;       // Essentialy a pointer to an integer value holding EPOCH seconds. After 2038 this may be a problem. 
+    time_t epoch;       // Essentially a pointer to an integer value holding EPOCH seconds. After 2038 this may be a problem.
 };
 
 //////////////////////////////////////////////////
@@ -289,7 +289,7 @@ public:
     ~Line();
     string extractNextElementFromLine(string* line);
     string extractLastElementFromLine(string* line);
-    int calcNrCols(string* line);     // Calculates how many coloumns (words/tokens) there are in the string
+    int calcNrCols(string* line);     // Calculates how many columns (words/tokens) there are in the string
     int checkDigit(string line);     // Checks if the string contains digits.
     int removeWhites(string* line);
 };
@@ -367,11 +367,11 @@ public:
     Dataset(GlobalConfig *gconfig);
     ~Dataset();    
     size_t stps;               // Number of timesteps used.
-    size_t nr_nodes;           // We allocate one inflow and action series pr node. Not used in all of them , but makes it easyer.  
+    size_t nr_nodes;           // We allocate one inflow and action series per node. Not used in all of them, but makes it easier.
     GlobalConfig *gc; 
     double *price;          // We assume all nodes located in same price area. So we need only one price series. 
     double restprice;
-    double **inflow;        // One series for each node. We can point to these series from othe robjects.
+    double **inflow;        // One series for each node. We can point to these series from other objects.
     double **action;     // One series for each node. Could change in the future. 
     int *year;
     int *month;
@@ -419,7 +419,7 @@ public:
 
     double days_with_production;
     double remaining_Mm3;
-    double local_remaining_Mm3;  // The remainding volume in the Node.
+    double local_remaining_Mm3;  // The remaining volume in the Node.
     double remaining_Euro;
     double remaining_MWh;
     double remaining_upstream_Mm3;
@@ -845,7 +845,7 @@ public:
     double waterbalance;
     int nodes_idnrs[MAX_NR_NODES];
     double sum_prod_MWh;
-    double sum_total_MWh; // Production pluss remaining in whole riversystem
+    double sum_total_MWh; // Production plus remaining in whole riversystem
     double adjust_cost;   // Adjustment cost
 
     // For use in ValueFunction calculations
@@ -885,7 +885,7 @@ public:
     int WriteSelectedOutputMatrix();
     double GetEndingReservoirLevel(size_t r_idnr);
     void PrintEconomicInfo(class Herss *herss_obj);
-    void DiagnoseRiversystemConfiguration();   // RUn some checks to see if the configuration of the riversystem is correct.
+    void DiagnoseRiversystemConfiguration();   // Run checks to see if the configuration of the riversystem is correct.
 
 private:
     std::vector<Node*> node_storage;
