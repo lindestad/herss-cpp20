@@ -389,6 +389,17 @@ public:
     void readAllData();
     void multi_temporal_resolution();
     int getDeltaT(size_t timestep);  // Get delta_t for a specific timestep
+
+private:
+    std::vector<double> price_storage;
+    std::vector<std::vector<double>> inflow_storage;
+    std::vector<std::vector<double>> action_storage;
+    std::vector<double*> inflow_rows;
+    std::vector<double*> action_rows;
+    std::vector<int> year_storage;
+    std::vector<int> month_storage;
+    std::vector<int> day_storage;
+    std::vector<int> hour_storage;
 };
 ///////////////////////////////////////////////////////////////////////////////////////////
 class Scenario {

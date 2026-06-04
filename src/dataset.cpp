@@ -18,58 +18,48 @@ Dataset::Dataset(GlobalConfig *gc){
 
     this->stps     = gc->stps;
     this->nr_nodes = gc->nr_nodes;
-    try {
-        inflow  = new double*[stps];
-        action = new double*[stps];
-        for( size_t t = 0; t < stps; ++t ) {
-            inflow[t] = new double[nr_nodes];
-            action[t] = new double[nr_nodes];
-        }
-    }
-    catch(std::bad_alloc& exc) { 
-        LOG_ERR("Error: memory allocation failed."); 
-    }
-
-    for(size_t t = 0; t < stps;  t++) {
-        for(size_t n = 0; n < nr_nodes;  n++) {
-            inflow[t][n] = 0.0;  // To make things easyer and faster 
-            action[t][n] = NOT_INIT;
-        }
-    }
 
     try {
-        price   = new double[stps];
-        year    = new int[stps];
-        month   = new int[stps];
-        day     = new int[stps];
-        hour    = new int[stps];
+        inflow_storage.assign(stps, std::vector<double>(nr_nodes, 0.0));
+        action_storage.assign(stps, std::vector<double>(nr_nodes, NOT_INIT));
+        inflow_rows.resize(stps);
+        action_rows.resize(stps);
+
+        for(size_t t = 0; t < stps; ++t) {
+            inflow_rows[t] = inflow_storage[t].data();
+            action_rows[t] = action_storage[t].data();
+        }
+
+        price_storage.assign(stps, NOT_INIT);
+        year_storage.assign(stps, NOT_INIT);
+        month_storage.assign(stps, NOT_INIT);
+        day_storage.assign(stps, NOT_INIT);
+        hour_storage.assign(stps, NOT_INIT);
     }
-    catch(std::bad_alloc& exc) { 
-        LOG_ERR("Error: memory allocation failed."); 
+    catch(std::bad_alloc& exc) {
+        LOG_ERR("Error: memory allocation failed.");
     }
+
+    inflow = inflow_rows.data();
+    action = action_rows.data();
+    price = price_storage.data();
+    year = year_storage.data();
+    month = month_storage.data();
+    day = day_storage.data();
+    hour = hour_storage.data();
+
     this->restprice = NOT_INIT;
-    for(size_t t = 0; t < stps; t++) {
-        price[t] = NOT_INIT;
-        year[t]  = NOT_INIT;
-        month[t] = NOT_INIT;
-        day[t]   = NOT_INIT;
-        hour[t]  = NOT_INIT;
-    }
 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
 Dataset::~Dataset(){
-    for(size_t t = 0; t < stps; t++) {
-        delete [] inflow[t];
-        delete [] action[t];
-    }
-    delete [] inflow;
-    delete [] action;
-    delete [] price;
-    delete [] year;
-    delete [] month;
-    delete [] day;
-    delete [] hour;
+    inflow = nullptr;
+    action = nullptr;
+    price = nullptr;
+    year = nullptr;
+    month = nullptr;
+    day = nullptr;
+    hour = nullptr;
     this->gc = NULL;
 
 }
