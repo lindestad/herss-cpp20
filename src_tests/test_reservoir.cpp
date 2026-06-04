@@ -2,17 +2,20 @@
 #include "test_paths.h"
 #include "herss.h"
 #include <vector>
+#include <memory>
 
 // Lightweight fixture to build a synthetic reservoir with simple curves
 class ReservoirTest : public ::testing::Test {
 protected:
     Reservoir res;
-    Scenario* scen = nullptr;
+    std::unique_ptr<Scenario> scen;
+    std::unique_ptr<Powerstation> downstream;
+    std::unique_ptr<Scenario> downstream_scenario;
 
     void SetUp() override {
         // Minimal scenario: 4 timesteps, 1-hour default
-        scen = new Scenario(4, 3600, 0);
-        res.S = scen;
+        scen = std::make_unique<Scenario>(4, 3600, 0);
+        res.S = scen.get();
     res.idnr = 0;
     res.nodename = "TEST_RES";
 
@@ -43,23 +46,20 @@ protected:
         res.reservoir_init_fr = 0.5; // halfway LRW-HRW -> ~110 masl
 
         // Downstream node to receive overflow (powerstation is fine; only using Scenario)
-        auto* downstream = new Powerstation();
-        downstream->S = new Scenario(4, 3600, 0);
-        res.ptr_downstream_node_overflow = downstream;
+        downstream = std::make_unique<Powerstation>();
+        downstream_scenario = std::make_unique<Scenario>(4, 3600, 0);
+        downstream->S = downstream_scenario.get();
+        res.ptr_downstream_node_overflow = downstream.get();
         res.outlet_overflow_in_use = true;
 
         // Complete initialization
         res.InitReservoir();
     }
 
-    void TearDown() override {
-        // Clean up downstream allocations
-        if (res.ptr_downstream_node_overflow) {
-            delete res.ptr_downstream_node_overflow->S;
-            delete res.ptr_downstream_node_overflow;
-            res.ptr_downstream_node_overflow = nullptr;
-        }
-        delete scen;
+    void TearDown() override
+    {
+        res.S = nullptr;
+        res.ptr_downstream_node_overflow = nullptr;
     }
 };
 

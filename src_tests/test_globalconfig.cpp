@@ -7,9 +7,8 @@
 class GlobalConfigTest : public ::testing::Test
 {
 protected:
-    GlobalConfig *gc;
-    void SetUp() override { gc = new GlobalConfig(); }
-    void TearDown() override { delete gc; }
+    GlobalConfig gc_obj;
+    GlobalConfig *gc = &gc_obj;
 };
 
 // Test: Constructor initializes all members to their default values

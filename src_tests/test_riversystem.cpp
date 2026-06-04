@@ -1,29 +1,29 @@
 #include <gtest/gtest.h>
 #include "test_paths.h"
 #include "herss.h"
+#include <memory>
+#include <vector>
 
 // Helper to build a minimal GlobalConfig with specified node layout
-static GlobalConfig* makeGC(size_t stps,
-                            std::vector<NodeType> types) {
-    auto* gc = new GlobalConfig();
-    gc->stps = stps;
-    gc->dt = 3600;
-    gc->nr_nodes = types.size();
-    gc->nr_reservoirs = 0;
-    gc->nr_pstations  = 0;
-    gc->nr_channels   = 0;
+static void configureGC(GlobalConfig& gc, size_t stps, std::vector<NodeType> types) {
+    gc.stps = stps;
+    gc.dt = 3600;
+    gc.nr_nodes = types.size();
+    gc.nr_reservoirs = 0;
+    gc.nr_pstations  = 0;
+    gc.nr_channels   = 0;
     for (size_t i = 0; i < types.size(); ++i) {
-        gc->nodetypes[i] = types[i];
-        if (types[i] == NodeType::RESERVOIR) gc->nr_reservoirs++;
-        if (types[i] == NodeType::PSTATION) gc->nr_pstations++;
-        if (types[i] == NodeType::CHANNEL) gc->nr_channels++;
+        gc.nodetypes[i] = types[i];
+        if (types[i] == NodeType::RESERVOIR) gc.nr_reservoirs++;
+        if (types[i] == NodeType::PSTATION) gc.nr_pstations++;
+        if (types[i] == NodeType::CHANNEL) gc.nr_channels++;
     }
-    return gc;
 }
 
 // Attach a fresh Scenario to a Node with zeroed arrays
-static void attachScenario(Node* n, size_t stps, size_t dt) {
-    n->S = new Scenario(stps, dt, n->idnr);
+static std::unique_ptr<Scenario> attachScenario(Node* n, size_t stps, size_t dt) {
+    auto scenario = std::make_unique<Scenario>(stps, dt, n->idnr);
+    n->S = scenario.get();
     // Zero arrays for determinism
     for (size_t t = 0; t < stps; ++t) {
         n->S->price[t] = 0.0;
@@ -31,28 +31,19 @@ static void attachScenario(Node* n, size_t stps, size_t dt) {
         n->S->cost[t] = 0.0;
         n->S->Power[t] = 0.0;
     }
+    return scenario;
 }
 
 class RiversystemTest : public ::testing::Test {
 protected:
-    GlobalConfig* gc = nullptr;
-    Riversystem* rs = nullptr;
-
-    void TearDown() override {
-        // Riversystem destructor deletes its arrays; but scenarios are owned by Nodes
-        if (rs) {
-            for (size_t n = 0; n < gc->nr_nodes; ++n) {
-                delete rs->nodes[n]->S; // safe if set
-            }
-            delete rs;
-        }
-        delete gc;
-    }
+    GlobalConfig gc;
+    std::unique_ptr<Riversystem> rs;
+    std::vector<std::unique_ptr<Scenario>> scenarios;
 };
 
 TEST_F(RiversystemTest, Constructor_WiresNodesByType) {
-    gc = makeGC(3, {RESERVOIR, PSTATION, CHANNEL});
-    rs = new Riversystem(gc);
+    configureGC(gc, 3, {RESERVOIR, PSTATION, CHANNEL});
+    rs = std::make_unique<Riversystem>(&gc);
     ASSERT_EQ(rs->nr_nodes, 3u);
     ASSERT_EQ(rs->nr_reservoirs, 1u);
     ASSERT_EQ(rs->nr_pstations, 1u);
@@ -67,36 +58,36 @@ TEST_F(RiversystemTest, Constructor_WiresNodesByType) {
 }
 
 TEST_F(RiversystemTest, GetEndingReservoirLevel_ReturnsLastFraction) {
-    gc = makeGC(4, {RESERVOIR, PSTATION});
-    rs = new Riversystem(gc);
+    configureGC(gc, 4, {RESERVOIR, PSTATION});
+    rs = std::make_unique<Riversystem>(&gc);
     // Attach scenarios
-    attachScenario(rs->nodes[0], gc->stps, gc->dt);
-    attachScenario(rs->nodes[1], gc->stps, gc->dt);
+    scenarios.push_back(attachScenario(rs->nodes[0], gc.stps, gc.dt));
+    scenarios.push_back(attachScenario(rs->nodes[1], gc.stps, gc.dt));
     rs->nodes[0]->nodetype = RESERVOIR;
     rs->nodes[1]->nodetype = PSTATION;
     // Set reservoir end fraction
-    rs->reservoirs[0].S->res_fr[gc->stps - 1] = 0.73;
+    rs->reservoirs[0].S->res_fr[gc.stps - 1] = 0.73;
     double got = rs->GetEndingReservoirLevel(0);
     EXPECT_NEAR(got, 0.73, 1e-12);
 }
 
 TEST_F(RiversystemTest, GetEndingReservoirLevel_OutOfRange_Exit) {
-    gc = makeGC(2, {RESERVOIR});
-    rs = new Riversystem(gc);
+    configureGC(gc, 2, {RESERVOIR});
+    rs = std::make_unique<Riversystem>(&gc);
     // No need to attach scenarios; function will exit before use
     EXPECT_EXIT(rs->GetEndingReservoirLevel(5), ::testing::ExitedWithCode(EXIT_FAILURE), ".*");
 }
 
 TEST_F(RiversystemTest, CalcSimulationProfit_SumsIncomeMinusCostAcrossNodes) {
-    gc = makeGC(3, {RESERVOIR, PSTATION, CHANNEL});
-    rs = new Riversystem(gc);
-    for (size_t i = 0; i < gc->nr_nodes; ++i) attachScenario(rs->nodes[i], gc->stps, gc->dt);
+    configureGC(gc, 3, {RESERVOIR, PSTATION, CHANNEL});
+    rs = std::make_unique<Riversystem>(&gc);
+    for (size_t i = 0; i < gc.nr_nodes; ++i) scenarios.push_back(attachScenario(rs->nodes[i], gc.stps, gc.dt));
     // Fill incomes/costs
     // t0: sum income= (1+2+3)=6, cost=(0.5+0.5+0.5)=1.5
     // t1: sum income= (2+4+6)=12, cost=(1+1+1)=3
     // t2: sum income= (3+6+9)=18, cost=(1.5+1.5+1.5)=4.5
     // total profit = (6-1.5)+(12-3)+(18-4.5) = 27.0
-    for (size_t t = 0; t < gc->stps; ++t) {
+    for (size_t t = 0; t < gc.stps; ++t) {
         rs->nodes[0]->S->income[t] = 1.0*(t+1);
         rs->nodes[1]->S->income[t] = 2.0*(t+1);
         rs->nodes[2]->S->income[t] = 3.0*(t+1);
@@ -109,9 +100,9 @@ TEST_F(RiversystemTest, CalcSimulationProfit_SumsIncomeMinusCostAcrossNodes) {
 }
 
 TEST_F(RiversystemTest, CalcVF_ComputesValueFunctionAndTotals) {
-    gc = makeGC(3, {RESERVOIR, PSTATION, CHANNEL});
-    rs = new Riversystem(gc);
-    for (size_t i = 0; i < gc->nr_nodes; ++i) attachScenario(rs->nodes[i], gc->stps, gc->dt);
+    configureGC(gc, 3, {RESERVOIR, PSTATION, CHANNEL});
+    rs = std::make_unique<Riversystem>(&gc);
+    for (size_t i = 0; i < gc.nr_nodes; ++i) scenarios.push_back(attachScenario(rs->nodes[i], gc.stps, gc.dt));
     // Set nodetypes explicitly since topology reader isn't invoked in this unit test
     rs->nodes[0]->nodetype = RESERVOIR;
     rs->nodes[1]->nodetype = PSTATION;
@@ -134,7 +125,7 @@ TEST_F(RiversystemTest, CalcVF_ComputesValueFunctionAndTotals) {
     rs->nodes[1]->S->Power[2] = 7.0;
 
     // Incomes and costs across nodes
-    for (size_t t = 0; t < gc->stps; ++t) {
+    for (size_t t = 0; t < gc.stps; ++t) {
         rs->nodes[0]->S->income[t] = 10.0; rs->nodes[0]->S->cost[t] = 1.0;
         rs->nodes[1]->S->income[t] = 20.0; rs->nodes[1]->S->cost[t] = 2.0;
         rs->nodes[2]->S->income[t] = 0.0;  rs->nodes[2]->S->cost[t] = 0.5;
@@ -158,8 +149,8 @@ TEST_F(RiversystemTest, CalcVF_ComputesValueFunctionAndTotals) {
 
 
 TEST_F(RiversystemTest, WriteSelectedOutputMatrix_Exit) {
-    gc = makeGC(1, {RESERVOIR});
-    rs = new Riversystem(gc);
-    attachScenario(rs->nodes[0], gc->stps, gc->dt);
+    configureGC(gc, 1, {RESERVOIR});
+    rs = std::make_unique<Riversystem>(&gc);
+    scenarios.push_back(attachScenario(rs->nodes[0], gc.stps, gc.dt));
     EXPECT_EXIT(rs->WriteSelectedOutputMatrix(), ::testing::ExitedWithCode(EXIT_FAILURE), ".*");
 }

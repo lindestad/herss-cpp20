@@ -8,13 +8,8 @@
 class ArrayCurveTest : public ::testing::Test
 {
 protected:
-    ArrayCurve *curve;
-    void SetUp() override { 
-        curve = new ArrayCurve(); 
-    }
-    void TearDown() override { 
-        delete curve; 
-    }
+    ArrayCurve curve_obj;
+    ArrayCurve *curve = &curve_obj;
 };
 
 // Test: Constructor creates object successfully
@@ -132,4 +127,3 @@ TEST_F(ArrayCurveTest, X2YReturnsErrorOnOutOfBoundsInput)
     EXPECT_DOUBLE_EQ(result1, -1.0 * VERY_LARGE_NUMBER);
     EXPECT_DOUBLE_EQ(result2, -1.0 * VERY_LARGE_NUMBER);
 }
-

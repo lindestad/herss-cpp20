@@ -4,17 +4,18 @@
 #include <string>
 #include <fstream>
 #include <cmath>
+#include <memory>
 
 // Test fixture for Dataset tests
 class DatasetTest : public ::testing::Test
 {
 protected:
-    GlobalConfig *gc;
-    Dataset *dataset;
+    GlobalConfig gc_obj;
+    GlobalConfig *gc = &gc_obj;
+    std::unique_ptr<Dataset> dataset;
     
     void SetUp() override 
     { 
-        gc = new GlobalConfig();
         // Set up basic configuration for testing
         gc->topologyfile = herssTestDataPath("topology.txt");
         gc->pricefile = herssTestDataPath("pricefile.txt");
@@ -25,13 +26,7 @@ protected:
         gc->checkNrSteps();
         ASSERT_EQ(gc->n_action_nodes_from_topology, 4u);
         
-        dataset = new Dataset(gc);
-    }
-    
-    void TearDown() override 
-    { 
-        delete dataset;
-        delete gc;
+        dataset = std::make_unique<Dataset>(gc);
     }
 };
 

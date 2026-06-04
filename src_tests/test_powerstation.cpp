@@ -5,21 +5,25 @@
 #include <fstream>
 #include <cmath>
 #include <vector>
+#include <memory>
 
 // Test fixture for Powerstation tests using real uTAHPS topology data
 class PowerstationTest : public ::testing::Test
 {
 protected:
-    Powerstation* powerstation;
-    GlobalConfig* gc;
-    Scenario* scenario;
-    Herss* herss_obj;
-    Dataset* dataset;
+    std::unique_ptr<Powerstation> powerstation_owner;
+    std::unique_ptr<Scenario> scenario_owner;
+    GlobalConfig gc_obj;
+    std::unique_ptr<Herss> herss_obj;
+    std::unique_ptr<Dataset> dataset;
+
+    Powerstation* powerstation = nullptr;
+    GlobalConfig* gc = &gc_obj;
+    Scenario* scenario = nullptr;
     
     void SetUp() override 
     {
         // Initialize global config with real uTAHPS parameters
-        gc = new GlobalConfig();
         gc->globalfile = herssTestDataPath("global.txt");
         gc->topologyfile = herssTestDataPath("topology.txt");
         gc->pricefile = herssTestDataPath("pricefile.txt");
@@ -41,37 +45,33 @@ protected:
     // gc->nr_nodes = 12; // Determined by topology
         
         // Create dataset to initialize price and time data
-        dataset = new Dataset(gc);
+        dataset = std::make_unique<Dataset>(gc);
         dataset->readAllData(); // This loads real price/inflow data and calls multi_temporal_resolution
         
         // Create herss object for variable timestep testing  
-        herss_obj = new Herss(gc);
-        herss_obj->data = dataset;
+        herss_obj = std::make_unique<Herss>(gc);
+        herss_obj->data = dataset.get();
         
         // Initialize powerstation - we'll set specific ones in individual tests
         powerstation = nullptr;
     }
-    
-    void TearDown() override 
+
+    void resetPowerstation()
     {
-        if (powerstation) {
-            delete powerstation;
-        }
-        delete herss_obj;
-        delete dataset;
-        delete gc;
+        scenario_owner.reset();
+        powerstation_owner = std::make_unique<Powerstation>();
+        scenario_owner = std::make_unique<Scenario>(gc->stps, gc->dt, 0);
+        powerstation = powerstation_owner.get();
+        scenario = scenario_owner.get();
+        powerstation->S = scenario;
     }
     
     // Set up SVOLETJONN powerstation (idnr=1) from uTAHPS topology
     void setupSvoletjonn() {
-        powerstation = new Powerstation();
+        resetPowerstation();
         powerstation->idnr = 1;
         powerstation->nodename = "SVOLETJONN";
         powerstation->stps = gc->stps;
-        
-        // Initialize scenario data
-        scenario = new Scenario(gc->stps, gc->dt, 0);
-        powerstation->S = scenario;
         
         // Real SVOLETJONN parameters from topology.txt
         powerstation->static_gen_efficiency = 0.96;
@@ -122,14 +122,10 @@ protected:
     
     // Set up SVEIGSHYL_I powerstation (idnr=6) from uTAHPS topology
     void setupSveigshylI() {
-        powerstation = new Powerstation();
+        resetPowerstation();
         powerstation->idnr = 6;
         powerstation->nodename = "SVEIGSHYL_I";
         powerstation->stps = gc->stps;
-        
-        // Initialize scenario data
-        scenario = new Scenario(gc->stps, gc->dt, 0);
-        powerstation->S = scenario;
         
         // Real SVEIGSHYL_I parameters from topology.txt
         powerstation->static_gen_efficiency = 0.96;
@@ -180,14 +176,10 @@ protected:
     
     // Set up EASTER powerstation (idnr=10) - largest unit in uTAHPS
     void setupEaster() {
-        powerstation = new Powerstation();
+        resetPowerstation();
         powerstation->idnr = 10;
         powerstation->nodename = "EASTER";
         powerstation->stps = gc->stps;
-        
-        // Initialize scenario data
-        scenario = new Scenario(gc->stps, gc->dt, 0);
-        powerstation->S = scenario;
         
         // Real EASTER parameters from topology.txt
         powerstation->static_gen_efficiency = 0.96;
@@ -238,14 +230,10 @@ protected:
     
     // Set up dual generator powerstation for testing multiple generators
     void setupDualGenerators() {
-        powerstation = new Powerstation();
+        resetPowerstation();
         powerstation->idnr = 99; // Test ID
         powerstation->nodename = "TEST_DUAL";
         powerstation->stps = gc->stps;
-        
-        // Initialize scenario data
-        scenario = new Scenario(gc->stps, gc->dt, 0);
-        powerstation->S = scenario;
         
         // Test parameters for dual generator setup
         powerstation->static_gen_efficiency = 0.95;
@@ -589,7 +577,7 @@ TEST_F(PowerstationTest, CheckWaterBalance_CorrectCalculation)
         powerstation->S->tot_outflow[t] = 10.0; // 10 m3/s outflow
     }
     
-    int result = powerstation->CheckWaterBalance(herss_obj);
+    int result = powerstation->CheckWaterBalance(herss_obj.get());
     EXPECT_EQ(result, 0); // Should pass water balance
 }
 
@@ -603,7 +591,7 @@ TEST_F(PowerstationTest, CheckWaterBalance_WithVariableTimesteps)
         powerstation->S->tot_outflow[t] = 5.0;
     }
     
-    int result = powerstation->CheckWaterBalance(herss_obj);
+    int result = powerstation->CheckWaterBalance(herss_obj.get());
     EXPECT_EQ(result, 0);
 }
 
@@ -707,7 +695,8 @@ TEST_F(PowerstationTest, Simulate_DownstreamNode_ReceivesInflow)
     setupDualGenerators();
     // Create a mock downstream node
     Powerstation downstream;
-    downstream.S = new Scenario(gc->stps, gc->dt, 0);
+    auto downstream_scenario = std::make_unique<Scenario>(gc->stps, gc->dt, 0);
+    downstream.S = downstream_scenario.get();
     powerstation->ptr_downstream_node = &downstream;
     powerstation->downstream_node_in_use = true;
     // Initialize downstream inflow
@@ -718,7 +707,6 @@ TEST_F(PowerstationTest, Simulate_DownstreamNode_ReceivesInflow)
     powerstation->Simulate(0);
     // Downstream node should receive the outflow as inflow
     EXPECT_NEAR(downstream.S->up_inflow[0], 10.0, 0.001);
-    delete downstream.S;
 }
 
 // Performance Tests
