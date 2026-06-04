@@ -793,6 +793,10 @@ class Channel: public Node {
     public:
     Channel();
     ~Channel();
+    Channel(const Channel&) = delete;
+    Channel& operator=(const Channel&) = delete;
+    Channel(Channel&&) noexcept = default;
+    Channel& operator=(Channel&&) noexcept = default;
     size_t stps;
     size_t dt;
     GlobalConfig *gc;
@@ -822,6 +826,9 @@ class Channel: public Node {
     int SetStartState(void);
     void PrintChannelWater(void);
     void ValidateChannelSettings();  // We check if the settings for the channel are valid. For example, that the travel time is not longer than the maximum allowed.
+
+private:
+    std::unique_ptr<CascadedReservoirs> casc_reservoirs_owner;
 
 };
 /////////////////////////////////////////////////////////////////////////////////////////

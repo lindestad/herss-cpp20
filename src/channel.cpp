@@ -25,10 +25,7 @@ Channel::Channel(){
 }
 //-----------------------------------------------------------------------
 Channel::~Channel(){
-    if(this->casc_reservoirs != nullptr) {
-        delete this->casc_reservoirs;
-        this->casc_reservoirs = nullptr;
-    }
+    this->casc_reservoirs = nullptr;
 }
 //-----------------------------------------------------------------------
 // We check if the settings for the channel are valid
@@ -50,8 +47,9 @@ void Channel::ValidateChannelSettings() {
         if(this->initial_storage_linres_Mm3.empty()) {
             this->initial_storage_linres_Mm3.assign(this->num_cascaded_reservoirs, 0.0);
         }
-        this->casc_reservoirs = 
-        new CascadedReservoirs(this->K_traveltime_hours, this->num_cascaded_reservoirs);
+        this->casc_reservoirs_owner =
+            std::make_unique<CascadedReservoirs>(this->K_traveltime_hours, this->num_cascaded_reservoirs);
+        this->casc_reservoirs = this->casc_reservoirs_owner.get();
         // Transfer initial conditions to the cascaded linear reservoirs.
         this->casc_reservoirs->setInitialStorage(this->initial_storage_linres_Mm3);
     }

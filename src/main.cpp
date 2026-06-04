@@ -20,15 +20,14 @@ BVM May 20206
 //////////////////////////////////////////////////////
 int main(int argc, char *argv[]) {
 
-    // Tracking start date and time of the program.
+    // Track start date and time of the program.
     Xtime xtime_start;
 
     string xtime_start_str;
     xtime_start.getNowString(xtime_start_str);
 
 
-    GlobalConfig *gc;
-    gc     = new GlobalConfig();
+    GlobalConfig gc;
 
     if (argc != 2) {
         cout << "#################################################################\n";
@@ -60,7 +59,7 @@ int main(int argc, char *argv[]) {
     LOG_INFO("# VERSION_DATE: " + VERSION_DATE);
     LOG_INFO("#################################################################");
 
-    // Note that we dont use newline at the end of the log messages, because the logger adds it. 
+    // Note that we do not use newline at the end of the log messages, because the logger adds it.
     // We can write all logs to screen if needed. 
     // I turned it off in logger.h. Too much flushing of the screen.
     
@@ -71,67 +70,61 @@ int main(int argc, char *argv[]) {
     LOG_MSG("VERSION: " + VERSION );
     LOG_MSG("VERSION_DATE: " + VERSION_DATE);
 
-    gc->globalfile     = string(argv[1]);
+    gc.globalfile     = string(argv[1]);
     
-    gc->readGlobalFile();
-    gc->SetDirectoriesAndFilenames();
-    gc->Diagnose();
+    gc.readGlobalFile();
+    gc.SetDirectoriesAndFilenames();
+    gc.Diagnose();
 
-    gc->checkNrSteps();  // This can be voided if you want to set stps manually before allocation of objects
+    gc.checkNrSteps();  // This can be voided if you want to set stps manually before allocation of objects
 
-    if(gc->use_reservoir_geometry) {
+    if(gc.use_reservoir_geometry) {
         LOG_INFO("Using reservoir geometry for calculating reservoir filling and masl. ");
     }
 
-    if(gc->printglobalinfo) {
-        gc->printGlobalInfo();
+    if(gc.printglobalinfo) {
+        gc.printGlobalInfo();
     }
 
-    Dataset *data;
-    data = new Dataset(gc);
-    data->readAllData(); 
+    Dataset data(&gc);
+    data.readAllData();
 
-    Herss *herss;
-    herss = new Herss(gc);
+    Herss herss(&gc);
 
-    herss->prepaireSimulation(data);
+    herss.prepaireSimulation(&data);
 
-    // Check that basic variables are initialized and sett within aceptable limits. 
-    herss->rs->DiagnoseRiversystemConfiguration();
+    // Check that basic variables are initialized and set within acceptable limits.
+    herss.rs->DiagnoseRiversystemConfiguration();
 
     LOG_MSG("Initialisation looks good. Starting simulation..... ");
-    herss->Simulate();
+    herss.Simulate();
 
-    herss->CheckWaterBalance();
-    herss->GlobalWaterBalance();
-    herss->CalcAdjustmenCosts();
+    herss.CheckWaterBalance();
+    herss.GlobalWaterBalance();
+    herss.CalcAdjustmenCosts();
     
-    if(gc->printeconomicinfo) {
-        printf("ValueFunction                = %.5f\n",  herss->rs->CalcVF(data->restprice));
-        printf("valuefunction_Euro           = %.3f\n",  herss->rs->valuefunction_Euro);
-        printf("tot_profit_Euro              = %.3f\n",  herss->rs->tot_profit_Euro);
-        printf("tot_remaining_Euro           = %.3f\n",  herss->rs->tot_remaining_Euro);
-        printf("tot_remaining_MWh            = %.4f\n",  herss->rs->tot_remaining_MWh);
-        printf("tot_remaining_Mm3            = %.4f\n",  herss->rs->tot_remaining_Mm3);
-        printf("tot_remaining_active_Mm3     = %.4f\n",  herss->rs->tot_active_remaining_Mm3);  
-        herss->rs->PrintEconomicInfo(herss);
+    if(gc.printeconomicinfo) {
+        printf("ValueFunction                = %.5f\n",  herss.rs->CalcVF(data.restprice));
+        printf("valuefunction_Euro           = %.3f\n",  herss.rs->valuefunction_Euro);
+        printf("tot_profit_Euro              = %.3f\n",  herss.rs->tot_profit_Euro);
+        printf("tot_remaining_Euro           = %.3f\n",  herss.rs->tot_remaining_Euro);
+        printf("tot_remaining_MWh            = %.4f\n",  herss.rs->tot_remaining_MWh);
+        printf("tot_remaining_Mm3            = %.4f\n",  herss.rs->tot_remaining_Mm3);
+        printf("tot_remaining_active_Mm3     = %.4f\n",  herss.rs->tot_active_remaining_Mm3);
+        herss.rs->PrintEconomicInfo(&herss);
     }
 
-    //herss->rs->PrintReservoirData2Screen();
-    herss->rs->CalcSimulationProfit();
-    //herss->PrintAllInput(); Uncomment to print all input data
+    //herss.rs->PrintReservoirData2Screen();
+    herss.rs->CalcSimulationProfit();
+    //herss.PrintAllInput(); Uncomment to print all input data
 
     // Now we need to write output to files
-    herss->rs->WriteRiverSystemData(data->restprice);
-    herss->rs->WriteReservoirData();
-    herss->WriteStateFile();
-    if(gc->write_nodefiles) {
-        herss->WriteNodeOutput();
-    }  
-
-    delete herss;
-    delete data;
-    delete gc;
+    herss.rs->WriteRiverSystemData(data.restprice);
+    herss.rs->WriteReservoirData();
+    herss.WriteStateFile();
+    if(gc.write_nodefiles) {
+        herss.WriteNodeOutput();
+    }
 
 
     // Starttime and runtime of HERSS 
