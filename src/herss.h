@@ -886,6 +886,11 @@ public:
     void PrintEconomicInfo(class Herss *herss_obj);
     void DiagnoseRiversystemConfiguration();   // RUn some checks to see if the configuration of the riversystem is correct.
 
+private:
+    std::vector<Node*> node_storage;
+    std::vector<Reservoir> reservoir_storage;
+    std::vector<Powerstation> pstation_storage;
+    std::vector<Channel> channel_storage;
     
 };
 /////////////////////////////////////////////////////////////////

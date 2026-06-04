@@ -23,26 +23,36 @@ Riversystem::Riversystem(GlobalConfig *gc) {
     this->nr_pstations  = gc->nr_pstations;
     this->nr_channels   = gc->nr_channels;
 
-    nodes = new Node*[nr_nodes];
+    node_storage.resize(nr_nodes, nullptr);
+    nodes = node_storage.data();
 
     if(nr_reservoirs > 0) {
-        reservoirs = new Reservoir[nr_reservoirs];
+        reservoir_storage.resize(nr_reservoirs);
+        reservoirs = reservoir_storage.data();
         for(size_t r = 0; r < nr_reservoirs; r++) {
             reservoirs[r].gc = gc;
         }
+    } else {
+        reservoirs = nullptr;
     }
 
     if(nr_pstations > 0) {
-        pstations = new Powerstation[nr_pstations];
+        pstation_storage.resize(nr_pstations);
+        pstations = pstation_storage.data();
         for(size_t p = 0; p < nr_pstations; p++) {
             pstations[p].gc = gc;
         }
+    } else {
+        pstations = nullptr;
     }
     if(nr_channels > 0) {
-        channels = new Channel[nr_channels];
+        channel_storage.resize(nr_channels);
+        channels = channel_storage.data();
         for(size_t c = 0; c < nr_channels; c++) {
             channels[c].gc = gc;
         }
+    } else {
+        channels = nullptr;
     }
 
     
@@ -76,18 +86,10 @@ Riversystem::Riversystem(GlobalConfig *gc) {
 }
 ///////////////////////////////////////////////////////////////////
 Riversystem::~Riversystem(){
-    if(nr_nodes > 0) {
-        delete [] nodes;
-    }
-    if(nr_reservoirs > 0) {
-        delete [] reservoirs;
-    }
-    if(nr_pstations > 0) {
-        delete [] pstations;
-    }
-    if(nr_channels > 0) {
-        delete [] channels;
-    }
+    nodes = nullptr;
+    reservoirs = nullptr;
+    pstations = nullptr;
+    channels = nullptr;
 }
 ///////////////////////////////////////////////////////////////////
 int Riversystem::WriteSelectedOutputMatrix() {
