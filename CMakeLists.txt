@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.28)
 
 project(herss
     VERSION 3.1.1
@@ -9,6 +9,7 @@ project(herss
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
 option(HERSS_ENABLE_NATIVE "Build with -march=native" OFF)
 
@@ -44,11 +45,21 @@ set_target_properties(herss_shared PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 
+add_library(herss_module)
+target_sources(herss_module
+    PUBLIC
+        FILE_SET CXX_MODULES
+        FILES src/herss.cppm
+)
+target_link_libraries(herss_module PUBLIC herss_core)
+target_include_directories(herss_module PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_compile_features(herss_module PUBLIC cxx_std_20)
+
 add_executable(herss_cli src/main.cpp)
 target_link_libraries(herss_cli PRIVATE herss_core)
 set_target_properties(herss_cli PROPERTIES OUTPUT_NAME herss.exe)
 
-foreach(target IN ITEMS herss_core herss_shared herss_cli)
+foreach(target IN ITEMS herss_core herss_shared herss_module herss_cli)
     target_compile_options(${target} PRIVATE
         $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
     )
@@ -102,4 +113,8 @@ if(BUILD_TESTING)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         DISCOVERY_TIMEOUT 60
     )
+
+    add_executable(herss_module_smoke src_tests/module_smoke.cpp)
+    target_link_libraries(herss_module_smoke PRIVATE herss_module)
+    add_test(NAME HerssModuleSmoke COMMAND herss_module_smoke)
 endif()
