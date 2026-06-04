@@ -57,11 +57,15 @@ Herss::Herss(GlobalConfig *gc){
     this->nr_nodes = gc->nr_nodes;
 
     try {
-        rs     = new Riversystem(gc);
-        scen = new Scenario*[gc->nr_nodes];
+        rs_owner = std::make_unique<Riversystem>(gc);
+        rs = rs_owner.get();
+        scenario_owner.reserve(gc->nr_nodes);
+        scenario_views.resize(gc->nr_nodes, nullptr);
         for(size_t s = 0; s < gc->nr_nodes; s++) {
-            scen[s] = new Scenario(gc->stps, gc->dt, s);
+            scenario_owner.push_back(std::make_unique<Scenario>(gc->stps, gc->dt, s));
+            scenario_views[s] = scenario_owner[s].get();
         }
+        scen = scenario_views.data();
     }
     catch(bad_alloc &) {
         LOG_ERR("Bad allocation");
@@ -70,13 +74,9 @@ Herss::Herss(GlobalConfig *gc){
 }
 ///////////////////////////////////////////////////////////
 Herss::~Herss(){
-    delete rs;
-    for(size_t s=0; s < nr_nodes; s++) {
-        delete scen[s];
-    }
-    delete [] scen;
-
-    this->gc = NULL;
+    rs = nullptr;
+    scen = nullptr;
+    this->gc = nullptr;
 }
 /////////////////////////////////////////////////////////////////////
 // This function is used to read the topology file.

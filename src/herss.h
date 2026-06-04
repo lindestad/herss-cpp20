@@ -38,6 +38,7 @@ SOFTWARE.
 #include <string.h>
 #include <sstream>
 #include <map>
+#include <memory>
 #include <cmath>
 #include "arraycurve.h"
 #include "logger.h"
@@ -939,6 +940,11 @@ public:
     double GetValueFunction_atStp(size_t t); 
     void SetDate(size_t t, int Y, int M, int D, int H);
     int getDeltaT(size_t timestep);  
+
+private:
+    std::unique_ptr<Riversystem> rs_owner;
+    std::vector<std::unique_ptr<Scenario>> scenario_owner;
+    std::vector<Scenario*> scenario_views;
     
 };
 /////////////////////////////////////////////////////////////////
