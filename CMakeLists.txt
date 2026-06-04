@@ -76,6 +76,7 @@ if(BUILD_TESTING)
         src_tests/test_channel.cpp
         src_tests/test_dataset.cpp
         src_tests/test_globalconfig.cpp
+        src_tests/test_interop.cpp
         src_tests/test_line.cpp
         src_tests/test_powerstation.cpp
         src_tests/test_reservoir.cpp
