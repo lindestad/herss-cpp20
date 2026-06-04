@@ -471,6 +471,44 @@ public:
     int *hour;
     int *qmin_flag;
 
+private:
+    std::vector<double> price_storage;
+    std::vector<std::vector<double>> action_storage;
+    std::vector<double*> action_rows;
+    std::vector<double> q_action_storage;
+    std::vector<double> inflow_storage;
+    std::vector<double> tot_outflow_storage;
+    std::vector<double> tot_inflow_storage;
+    std::vector<double> local_inflow_storage;
+    std::vector<double> up_inflow_storage;
+    std::vector<double> tunnelflow_m3s_storage;
+    std::vector<double> hatchflow_m3s_storage;
+    std::vector<double> overflow_m3s_storage;
+    std::vector<double> auto_qmin_m3s_storage;
+    std::vector<double> channel_storage_Mm3_storage;
+    std::vector<double> res_Mm3_storage;
+    std::vector<double> res_active_Mm3_storage;
+    std::vector<double> res_masl_storage;
+    std::vector<double> res_fr_storage;
+    std::vector<double> profit_storage;
+    std::vector<double> overflow_Mm3_storage;
+    std::vector<double> income_storage;
+    std::vector<double> cost_storage;
+    std::vector<double> cost_qmin_storage;
+    std::vector<double> startStopCost_storage;
+    std::vector<double> cost_lrw_storage;
+    std::vector<double> cost_fake_lrw_storage;
+    std::vector<double> adjust_cost_storage;
+    std::vector<double> Hbrutto_storage;
+    std::vector<double> Hnetto_storage;
+    std::vector<double> Power_storage;
+    std::vector<double> EstimatedEEKV_storage;
+    std::vector<int> year_storage;
+    std::vector<int> month_storage;
+    std::vector<int> day_storage;
+    std::vector<int> hour_storage;
+    std::vector<int> qmin_flag_storage;
+
 };
 //////////////////////////////////////////////////////////////////////////////////////////
 class QminPeriod {

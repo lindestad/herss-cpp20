@@ -29,7 +29,46 @@ SOFTWARE.
 
 #include "herss.h"
 
-Scenario::Scenario(){}
+Scenario::Scenario(){
+    stps = 0;
+    dt = 0;
+    idnr = 0;
+    price = nullptr;
+    action = nullptr;
+    q_action = nullptr;
+    inflow = nullptr;
+    tot_outflow = nullptr;
+    tot_inflow = nullptr;
+    local_inflow = nullptr;
+    up_inflow = nullptr;
+    tunnelflow_m3s = nullptr;
+    hatchflow_m3s = nullptr;
+    overflow_m3s = nullptr;
+    auto_qmin_m3s = nullptr;
+    channel_storage_Mm3 = nullptr;
+    res_Mm3 = nullptr;
+    res_active_Mm3 = nullptr;
+    res_masl = nullptr;
+    res_fr = nullptr;
+    profit = nullptr;
+    overflow_Mm3 = nullptr;
+    income = nullptr;
+    cost = nullptr;
+    cost_qmin = nullptr;
+    startStopCost = nullptr;
+    cost_lrw = nullptr;
+    cost_fake_lrw = nullptr;
+    adjust_cost = nullptr;
+    Hbrutto = nullptr;
+    Hnetto = nullptr;
+    Power = nullptr;
+    EstimatedEEKV = nullptr;
+    year = nullptr;
+    month = nullptr;
+    day = nullptr;
+    hour = nullptr;
+    qmin_flag = nullptr;
+}
 
 Scenario::Scenario(size_t stps, size_t dt, size_t idnr){
 
@@ -55,135 +94,99 @@ Scenario::Scenario(size_t stps, size_t dt, size_t idnr){
     sum_overflow_Mm3        = NOT_INIT;
 
     try {
-        price           = new double[stps];
-        action = new double*[stps];
-        for (size_t t = 0; t < stps; ++t) {
-            action[t] = new double[MAX_NR_NODES]; 
+        auto init_double = [this](std::vector<double>& storage, double value) {
+            storage.assign(this->stps, value);
+            return storage.data();
+        };
+        auto init_int = [this](std::vector<int>& storage, int value) {
+            storage.assign(this->stps, value);
+            return storage.data();
+        };
+
+        action_storage.assign(stps, std::vector<double>(MAX_NR_NODES, NOT_INIT));
+        action_rows.resize(stps);
+        for(size_t t = 0; t < stps; ++t) {
+            action_rows[t] = action_storage[t].data();
         }
-        q_action        = new double[stps];
-        inflow          = new double[stps];
-        tot_outflow     = new double[stps];
-        tot_inflow      = new double[stps];
-        local_inflow    = new double[stps];
-        up_inflow       = new double[stps];
-        res_Mm3         = new double[stps];
-        res_active_Mm3 = new double[stps];
+        action = action_rows.data();
 
-        res_masl        = new double[stps];
-        res_fr          = new double[stps];
-        profit          = new double[stps];
-        overflow_Mm3    = new double[stps];
-        income          = new double[stps];
-        cost            = new double[stps];
-        cost_qmin       = new double[stps];
-        startStopCost   = new double[stps];
-        cost_lrw        = new double[stps];
-        cost_fake_lrw   = new double[stps];
-        Hbrutto         = new double[stps];
-        Hnetto          = new double[stps];
-        Power           = new double[stps];
-        EstimatedEEKV   = new double[stps];
-
-        tunnelflow_m3s  = new double[stps];
-        hatchflow_m3s   = new double[stps];
-        overflow_m3s    = new double[stps];
-        auto_qmin_m3s   = new double[stps];
-        channel_storage_Mm3 = new double[stps];
-        adjust_cost         = new double[stps];
-
-        year            = new int[stps];
-        month           = new int[stps];
-        day             = new int[stps];
-        hour            = new int[stps];
-        qmin_flag       = new int[stps];
+        price = init_double(price_storage, NOT_INIT);
+        q_action = init_double(q_action_storage, NOT_INIT);
+        inflow = init_double(inflow_storage, 0.0);
+        tot_outflow = init_double(tot_outflow_storage, NOT_INIT);
+        tot_inflow = init_double(tot_inflow_storage, NOT_INIT);
+        local_inflow = init_double(local_inflow_storage, NOT_INIT);
+        up_inflow = init_double(up_inflow_storage, 0.0);
+        tunnelflow_m3s = init_double(tunnelflow_m3s_storage, NOT_INIT);
+        hatchflow_m3s = init_double(hatchflow_m3s_storage, NOT_INIT);
+        overflow_m3s = init_double(overflow_m3s_storage, NOT_INIT);
+        auto_qmin_m3s = init_double(auto_qmin_m3s_storage, NOT_INIT);
+        channel_storage_Mm3 = init_double(channel_storage_Mm3_storage, NOT_INIT);
+        res_Mm3 = init_double(res_Mm3_storage, NOT_INIT);
+        res_active_Mm3 = init_double(res_active_Mm3_storage, NOT_INIT);
+        res_masl = init_double(res_masl_storage, NOT_INIT);
+        res_fr = init_double(res_fr_storage, NOT_INIT);
+        profit = init_double(profit_storage, NOT_INIT);
+        overflow_Mm3 = init_double(overflow_Mm3_storage, NOT_INIT);
+        income = init_double(income_storage, NOT_INIT);
+        cost = init_double(cost_storage, NOT_INIT);
+        cost_qmin = init_double(cost_qmin_storage, NOT_INIT);
+        startStopCost = init_double(startStopCost_storage, NOT_INIT);
+        cost_lrw = init_double(cost_lrw_storage, NOT_INIT);
+        cost_fake_lrw = init_double(cost_fake_lrw_storage, NOT_INIT);
+        adjust_cost = init_double(adjust_cost_storage, 0.0);
+        Hbrutto = init_double(Hbrutto_storage, NOT_INIT);
+        Hnetto = init_double(Hnetto_storage, NOT_INIT);
+        Power = init_double(Power_storage, NOT_INIT);
+        EstimatedEEKV = init_double(EstimatedEEKV_storage, NOT_INIT);
+        year = init_int(year_storage, NOT_INIT);
+        month = init_int(month_storage, NOT_INIT);
+        day = init_int(day_storage, NOT_INIT);
+        hour = init_int(hour_storage, NOT_INIT);
+        qmin_flag = init_int(qmin_flag_storage, NOT_INIT);
     }
     catch(std::bad_alloc& exc) {
         printf("Error: memory allocation failed. \n"); 
         printf("file: %s  linenr: %d  function: %s \n", __FILE__ , __LINE__, __FUNCTION__);
 		exit(EXIT_FAILURE);
     }
-
-    for(size_t t = 0; t < this->stps; t++) {
-        price[t]           = NOT_INIT;
-        for (size_t n = 0; n < MAX_NR_NODES; ++n) {
-            action[t][n] = NOT_INIT;
-        }
-        q_action[t]        = NOT_INIT;
-        inflow[t]          = 0.0;     // To make things easy and faster 
-        tot_outflow[t]     = NOT_INIT;
-        tot_inflow[t]      = NOT_INIT;
-        local_inflow[t]    = NOT_INIT;
-        up_inflow[t]       = 0.0;        // To make things easy and faster 
-        res_Mm3[t]         = NOT_INIT;
-        res_active_Mm3[t]  = NOT_INIT;
-        res_masl[t]        = NOT_INIT;
-        res_fr[t]          = NOT_INIT;
-        profit[t]          = NOT_INIT;
-        overflow_Mm3[t]    = NOT_INIT;
-        income[t]          = NOT_INIT;
-        cost[t]            = NOT_INIT;
-        cost_qmin[t]       = NOT_INIT;
-        startStopCost[t]   = NOT_INIT;
-        cost_lrw[t]        = NOT_INIT;
-        cost_fake_lrw[t]   = NOT_INIT;
-        Hbrutto[t]         = NOT_INIT;
-        Hnetto[t]          = NOT_INIT;
-        Power[t]           = NOT_INIT;
-        year[t]            = NOT_INIT;
-        month[t]           = NOT_INIT;
-        day[t]             = NOT_INIT;
-        hour[t]            = NOT_INIT;
-        qmin_flag[t]       = NOT_INIT;
-        adjust_cost[t]     = 0.0;
-
-        EstimatedEEKV[t]   = NOT_INIT;
-
-        tunnelflow_m3s[t]  = NOT_INIT;
-        hatchflow_m3s[t]   = NOT_INIT;
-        overflow_m3s[t]    = NOT_INIT;
-        auto_qmin_m3s[t]   = NOT_INIT;
-        channel_storage_Mm3[t] = NOT_INIT;
-    }
 }
 ///////////////////////////////////////////////////////////////////////////////
 Scenario::~Scenario(){
-
-    delete [] price;
-    for (size_t t = 0; t < stps; ++t) {
-        delete[] action[t];
-    }
-    delete [] q_action;
-    delete [] inflow;
-    delete [] tot_outflow;
-    delete [] tot_inflow;
-    delete [] local_inflow;
-    delete [] up_inflow;
-    delete [] res_Mm3;
-    delete [] res_active_Mm3;
-    delete [] res_masl;
-    delete [] res_fr;
-    delete [] profit;
-    delete [] overflow_Mm3;
-    delete [] income;
-    delete [] cost;
-    delete [] cost_qmin;
-    delete [] startStopCost;
-    delete [] cost_lrw;
-    delete [] cost_fake_lrw;
-    delete [] Hbrutto;
-    delete [] Hnetto;
-    delete [] Power;
-    delete [] year;
-    delete [] month;
-    delete [] day;
-    delete [] hour;
-    delete [] qmin_flag;
-    delete [] tunnelflow_m3s;
-    delete [] hatchflow_m3s;
-    delete [] overflow_m3s;
-    delete [] auto_qmin_m3s;
-    delete [] channel_storage_Mm3;
-    delete [] adjust_cost;
-
+    price = nullptr;
+    action = nullptr;
+    q_action = nullptr;
+    inflow = nullptr;
+    tot_outflow = nullptr;
+    tot_inflow = nullptr;
+    local_inflow = nullptr;
+    up_inflow = nullptr;
+    res_Mm3 = nullptr;
+    res_active_Mm3 = nullptr;
+    res_masl = nullptr;
+    res_fr = nullptr;
+    profit = nullptr;
+    overflow_Mm3 = nullptr;
+    income = nullptr;
+    cost = nullptr;
+    cost_qmin = nullptr;
+    startStopCost = nullptr;
+    cost_lrw = nullptr;
+    cost_fake_lrw = nullptr;
+    Hbrutto = nullptr;
+    Hnetto = nullptr;
+    Power = nullptr;
+    EstimatedEEKV = nullptr;
+    year = nullptr;
+    month = nullptr;
+    day = nullptr;
+    hour = nullptr;
+    qmin_flag = nullptr;
+    tunnelflow_m3s = nullptr;
+    hatchflow_m3s = nullptr;
+    overflow_m3s = nullptr;
+    auto_qmin_m3s = nullptr;
+    channel_storage_Mm3 = nullptr;
+    adjust_cost = nullptr;
 }
 ///////////////////////////////////////////////////////////////////////////////
