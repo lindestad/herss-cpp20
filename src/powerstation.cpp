@@ -8,7 +8,9 @@ This software is released under the MIT license:
 Copyright (c) <2024> <Å Energi, Bernt Viggo Matheussen>
 ********************************************************************************/
 
-#include "herss.h"
+#include "herss_powerstation.h"
+#include "herss_system.h"
+#include "logger.h"
 #include <vector>
 
 Powerstation::Powerstation(){

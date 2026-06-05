@@ -15,7 +15,8 @@ Copyright (c) <2024> <Å Energi, Bernt Viggo Matheussen>
 #include <stdio.h>
 #include <string>
 #include <limits>
-#include "herss.h"
+#include "herss_common.h"
+#include "logger.h"
 
 // Static variable to track current timestep for error reporting
 static size_t current_timestep = 0;

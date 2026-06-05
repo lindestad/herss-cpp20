@@ -27,7 +27,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ********************************************************************************/
 
-#include "herss.h"
+#include "herss_system.h"
+#include "logger.h"
 #include <random>
 #include <functional>
 #include <limits>

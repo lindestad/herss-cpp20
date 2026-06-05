@@ -9,7 +9,9 @@ Copyright (c) <2024> <Å Energi, Bernt Viggo Matheussen>
 
 ********************************************************************************/
 
-#include "herss.h"
+#include "herss_channel.h"
+#include "herss_system.h"
+#include "logger.h"
 
 //-----------------------------------------------------------------------
 Channel::Channel(){
