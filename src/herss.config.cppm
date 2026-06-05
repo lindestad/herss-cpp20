@@ -1,6 +1,6 @@
 module;
 
-#include "herss.h"
+#include "herss_config.h"
 
 export module herss:config;
 

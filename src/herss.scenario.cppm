@@ -1,6 +1,6 @@
 module;
 
-#include "herss.h"
+#include "herss_scenario.h"
 
 export module herss:scenario;
 
