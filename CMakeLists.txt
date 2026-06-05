@@ -12,6 +12,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
 option(HERSS_ENABLE_NATIVE "Build with -march=native" OFF)
+option(HERSS_ENABLE_CPPYY_TEST "Run cppyy binding regression tests" ON)
 
 set(HERSS_CORE_SOURCES
     src/node.cpp
@@ -120,4 +121,67 @@ if(BUILD_TESTING)
     add_executable(herss_module_smoke src_tests/module_smoke.cpp)
     target_link_libraries(herss_module_smoke PRIVATE herss_module)
     add_test(NAME HerssModuleSmoke COMMAND herss_module_smoke)
+
+    if(HERSS_ENABLE_CPPYY_TEST)
+        find_program(HERSS_CPPYY_PYTHON
+            NAMES python3.12 python3.13 python3
+            DOC "Python interpreter with cppyy installed"
+        )
+        if(NOT HERSS_CPPYY_PYTHON)
+            message(FATAL_ERROR "HERSS_ENABLE_CPPYY_TEST is ON, but no Python interpreter was found")
+        endif()
+
+        set(HERSS_CPPYY_EXTRA_CLING_ARGS "" CACHE STRING "Extra Cling arguments used when importing cppyy")
+
+        if(NOT HERSS_CPPYY_EXTRA_CLING_ARGS)
+            find_program(HERSS_CPPYY_GXX15 NAMES g++-15)
+            if(HERSS_CPPYY_GXX15)
+                execute_process(
+                    COMMAND ${HERSS_CPPYY_GXX15} -E -x c++ - -v
+                    INPUT_FILE /dev/null
+                    ERROR_VARIABLE HERSS_CPPYY_GXX15_INCLUDE_TRACE
+                    OUTPUT_QUIET
+                )
+                string(REGEX MATCH "#include <\\.\\.\\.> search starts here:\n([^\n]*\n)*End of search list\\."
+                    HERSS_CPPYY_INCLUDE_BLOCK "${HERSS_CPPYY_GXX15_INCLUDE_TRACE}")
+                string(REPLACE "#include <...> search starts here:\n" "" HERSS_CPPYY_INCLUDE_BLOCK "${HERSS_CPPYY_INCLUDE_BLOCK}")
+                string(REPLACE "End of search list." "" HERSS_CPPYY_INCLUDE_BLOCK "${HERSS_CPPYY_INCLUDE_BLOCK}")
+                string(REPLACE "\n" ";" HERSS_CPPYY_INCLUDE_DIRS "${HERSS_CPPYY_INCLUDE_BLOCK}")
+
+                set(HERSS_CPPYY_EXTRA_CLING_ARGS "-nostdinc++")
+                foreach(include_dir IN LISTS HERSS_CPPYY_INCLUDE_DIRS)
+                    string(STRIP "${include_dir}" include_dir)
+                    if(include_dir AND EXISTS "${include_dir}")
+                        string(APPEND HERSS_CPPYY_EXTRA_CLING_ARGS " -isystem${include_dir}")
+                    endif()
+                endforeach()
+            endif()
+        endif()
+
+        execute_process(
+            COMMAND ${CMAKE_COMMAND} -E env
+                STDCXX=20
+                "EXTRA_CLING_ARGS=${HERSS_CPPYY_EXTRA_CLING_ARGS}"
+                ${HERSS_CPPYY_PYTHON} -c "import cppyy"
+            RESULT_VARIABLE HERSS_CPPYY_IMPORT_RESULT
+            OUTPUT_QUIET
+            ERROR_QUIET
+        )
+        if(NOT HERSS_CPPYY_IMPORT_RESULT EQUAL 0)
+            message(FATAL_ERROR
+                "HERSS_ENABLE_CPPYY_TEST is ON, but cppyy could not be imported by ${HERSS_CPPYY_PYTHON}. "
+                "Install cppyy for that interpreter or set HERSS_CPPYY_PYTHON/HERSS_CPPYY_EXTRA_CLING_ARGS."
+            )
+        endif()
+
+        add_test(NAME HerssCppyyInterop
+            COMMAND ${HERSS_CPPYY_PYTHON}
+                ${CMAKE_CURRENT_SOURCE_DIR}/src_tests/test_cppyy_interop.py
+                --source-dir ${CMAKE_CURRENT_SOURCE_DIR}
+                --library $<TARGET_FILE:herss_shared>
+        )
+        set_tests_properties(HerssCppyyInterop PROPERTIES
+            ENVIRONMENT "STDCXX=20;EXTRA_CLING_ARGS=${HERSS_CPPYY_EXTRA_CLING_ARGS}"
+        )
+    endif()
 endif()
