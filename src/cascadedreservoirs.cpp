@@ -18,7 +18,8 @@ Copyright (c) <2024> <Å Energi, Bernt Viggo Matheussen>
 #include <iomanip>
 #include <stdexcept>
 
-#include "herss.h"
+#include "herss_routing.h"
+#include "logger.h"
 
 
 //------------------------------------------------------------------------------------------------

@@ -8,7 +8,8 @@ This software is released under the MIT license.
 
 ********************************************************************************/
 
-#include "herss.h"
+#include "herss_config.h"
+#include "logger.h"
 
 Xtime::Xtime() {}
 Xtime::~Xtime() {}
@@ -232,5 +233,4 @@ string Xtime::currentDateTime() {
     return buf; 
 } 
  
-
 

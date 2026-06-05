@@ -27,7 +27,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ********************************************************************************/
 
-#include "herss.h"
+#include "herss_config.h"
+#include "herss_qmin.h"
 
 Qmin::Qmin(){}
 Qmin::~Qmin(){}

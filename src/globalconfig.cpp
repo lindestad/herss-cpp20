@@ -9,7 +9,8 @@ Copyright (c) <2024> <Å Energi, Bernt Viggo Matheussen>
 ********************************************************************************/
 
 
-#include "herss.h"
+#include "herss_config.h"
+#include "logger.h"
 
 #include <algorithm>
 #include <cctype>

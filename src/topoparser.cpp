@@ -9,7 +9,7 @@ This software is released under the MIT license.
 ********************************************************************************/
 
 
-#include "herss.h"
+#include "herss_config.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
