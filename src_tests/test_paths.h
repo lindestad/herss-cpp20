@@ -16,6 +16,10 @@
 #define HERSS_TEST_REFERENCE_OUTPUT_DIR "../src_tests/utahps_test/reference_output"
 #endif
 
+#ifndef HERSS_PROJECT_SOURCE_DIR
+#define HERSS_PROJECT_SOURCE_DIR ".."
+#endif
+
 inline std::string herssTestDataDir()
 {
     return std::filesystem::path(HERSS_TEST_DATA_DIR).string();
@@ -39,6 +43,11 @@ inline std::string herssTestExecutablePath()
 inline std::string herssTestReferenceOutputDir()
 {
     return std::filesystem::path(HERSS_TEST_REFERENCE_OUTPUT_DIR).string();
+}
+
+inline std::string herssProjectSourceDir()
+{
+    return std::filesystem::path(HERSS_PROJECT_SOURCE_DIR).string();
 }
 
 #endif

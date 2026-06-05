@@ -216,6 +216,33 @@ int Herss::prepaireSimulation(Dataset *data) {
 
     SetPointers();
 
+    // Map reservoir hatch actions from actions.txt by reservoir node id.
+    if(!data->action_colnames.empty()) {
+        for (size_t n = 0; n < gc->nr_nodes; ++n) {
+            Node* node = rs->nodes[n];
+            if (node->nodetype == NodeType::RESERVOIR) {
+                Reservoir* res = static_cast<Reservoir*>(node);
+
+                if(res->outlet_hatch_in_use) {
+                    int col_idx = -1;
+                    for (size_t c = 0; c < data->action_colnames.size(); ++c) {
+                        if (data->action_colnames[c] == std::to_string(res->idnr)) {
+                            col_idx = static_cast<int>(c);
+                            break;
+                        }
+                    }
+
+                    if (col_idx == -1) {
+                        LOG_ERR("ERROR: Could not find action column for " + std::to_string(res->idnr) + " in action file");
+                    }
+
+                    for (size_t t = 0; t < data->stps; ++t) {
+                        res->S->action[t][res->idnr] = data->action[t][col_idx];
+                    }
+                }
+            }
+        }
+    }
 
     // CHANGES BY OVE: Map generator actions from actions.txt to each generator in each powerstation
     if(!data->action_colnames.empty()) {

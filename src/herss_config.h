@@ -158,8 +158,6 @@ public:
     bool write_nodefiles;
     bool printglobalinfo;
     bool printeconomicinfo;
-    bool use_reservoir_curve;
-    bool use_reservoir_geometry;
 
     string logfilename;
     size_t nr_nodes;

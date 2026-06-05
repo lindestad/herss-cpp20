@@ -28,8 +28,8 @@ This software is released under the MIT license.
 using namespace std;
 
 // BVM May 2026, we start using the version convention MAJOR.MINOR.PATCH
-const string VERSION = "3.1.01";
-const string VERSION_DATE = "20260604";
+const string VERSION = "3.1.02";
+const string VERSION_DATE = "20260605";
 
 // Maximum number of nodes allowed. // to save coding
 #define MAX_NR_NODES 30

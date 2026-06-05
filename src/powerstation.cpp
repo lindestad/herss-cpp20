@@ -96,6 +96,15 @@ int Powerstation::Simulate(size_t t) {
         }
         Q_gen[g] = Q;
         total_Q += Q;
+
+        if(generators[g].action[t] < -0.000001 || generators[g].action[t] > 1.000001) {
+            LOG_WARN("ERROR: Action for generator " + std::to_string(g) + " in powerstation "
+                + std::to_string(int(idnr)) + " (" + nodename + ") is out of bounds: "
+                + std::to_string(generators[g].action[t]));
+            LOG_ERR("Check your action file, and make sure the action for generator "
+                + std::to_string(g) + " in powerstation " + std::to_string(int(idnr))
+                + " (" + nodename + ") is between 0.0 and 1.0");
+        }
     }
 
 

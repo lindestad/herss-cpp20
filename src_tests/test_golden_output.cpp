@@ -80,6 +80,49 @@ std::filesystem::path makeRunDirectory()
     return std::filesystem::temp_directory_path() / ("herss_utahps_golden_" + std::to_string(unique));
 }
 
+void copyDirectoryContents(const std::filesystem::path& source, const std::filesystem::path& destination)
+{
+    std::filesystem::create_directories(destination);
+    for (const auto& entry : std::filesystem::directory_iterator(source)) {
+        std::filesystem::copy(
+            entry.path(),
+            destination / entry.path().filename(),
+            std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing);
+    }
+}
+
+void expectExecutableOutputMatchesReference(const std::filesystem::path& caseDir)
+{
+    const std::filesystem::path executable = herssTestExecutablePath();
+    const std::filesystem::path referenceOutputDir = caseDir / "output";
+
+    ASSERT_TRUE(std::filesystem::exists(executable)) << executable;
+    ASSERT_TRUE(std::filesystem::exists(caseDir / "global.txt")) << caseDir;
+    ASSERT_TRUE(std::filesystem::exists(referenceOutputDir)) << referenceOutputDir;
+
+    const std::filesystem::path runDir = makeRunDirectory();
+    copyDirectoryContents(caseDir, runDir);
+    std::filesystem::remove_all(runDir / "output");
+    std::filesystem::create_directories(runDir / "output");
+
+    const std::string command = "cd " + quotePath(runDir) + " && " + quotePath(executable) + " global.txt";
+    const int exitCode = std::system(command.c_str());
+    ASSERT_EQ(exitCode, 0) << command;
+
+    const auto expectedFiles = regularFilesIn(referenceOutputDir);
+    const auto actualFiles = regularFilesIn(runDir / "output");
+    ASSERT_EQ(actualFiles, expectedFiles);
+
+    for (const auto& relativePath : expectedFiles) {
+        const std::filesystem::path expectedPath = referenceOutputDir / relativePath;
+        const std::filesystem::path actualPath = runDir / "output" / relativePath;
+        EXPECT_EQ(normalizedFileContents(actualPath), normalizedFileContents(expectedPath))
+            << "Generated output differs for " << caseDir << " / " << relativePath;
+    }
+
+    std::filesystem::remove_all(runDir);
+}
+
 } // namespace
 
 TEST(GoldenOutputTest, UtahpsExecutableOutputMatchesReferenceFiles)
@@ -133,4 +176,19 @@ TEST(GoldenOutputTest, UtahpsExecutableOutputMatchesReferenceFiles)
     }
 
     std::filesystem::remove_all(runDir);
+}
+
+TEST(GoldenOutputTest, MainlineDataOutputMatchesReferenceFiles)
+{
+    const std::filesystem::path projectRoot = herssProjectSourceDir();
+    const std::vector<std::filesystem::path> cases = {
+        projectRoot / "data" / "mini_utahps_new_inputformat",
+        projectRoot / "data" / "res_casc_C",
+        projectRoot / "data" / "res_casc_D",
+    };
+
+    for (const auto& caseDir : cases) {
+        SCOPED_TRACE(caseDir.string());
+        expectExecutableOutputMatchesReference(caseDir);
+    }
 }

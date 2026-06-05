@@ -114,6 +114,7 @@ if(BUILD_TESTING)
     target_compile_definitions(herss_tests PRIVATE
         HERSS_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/src_tests/utahps_test"
         HERSS_TEST_EXECUTABLE="$<TARGET_FILE:herss_cli>"
+        HERSS_PROJECT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
         HERSS_TEST_REFERENCE_OUTPUT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/src_tests/utahps_test/reference_output"
     )
 

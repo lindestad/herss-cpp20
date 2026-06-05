@@ -78,10 +78,6 @@ int main(int argc, char *argv[]) {
 
     gc.checkNrSteps();  // This can be voided if you want to set stps manually before allocation of objects
 
-    if(gc.use_reservoir_geometry) {
-        LOG_INFO("Using reservoir geometry for calculating reservoir filling and masl. ");
-    }
-
     if(gc.printglobalinfo) {
         gc.printGlobalInfo();
     }

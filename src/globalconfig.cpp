@@ -43,10 +43,6 @@ GlobalConfig::GlobalConfig(){
     this->printglobalinfo              = false;
     this->printeconomicinfo            = false;
 
-    this->use_reservoir_curve          = false;
-    this->use_reservoir_geometry       = false;
-
-
     this->dt                 = NOT_INIT;
     this->dt_last            = NOT_INIT;  // Last time step in the simulation
     this->stps               = NOT_INIT;
@@ -195,15 +191,6 @@ void GlobalConfig::Diagnose() {
         keyword = line_obj.extractNextElementFromLine(&line);
         value   = line_obj.extractNextElementFromLine(&line);
 
-        // Check wether we use RESERVOIR_CURVE or reservoir geometry for calculating the reservoir filling. 
-        if (keyword.compare("RESERVOIR_CURVE") == 0) {
-            this->use_reservoir_curve = true;
-        }
-        
-        if (keyword.compare("RESERVOIR_GEOMETRY") == 0) {
-            this->use_reservoir_geometry = true;
-        }
-
         if (keyword.compare("NODE") == 0) {
              if (value.compare("RESERVOIR") == 0) {
                 nodetypes[this->nr_nodes] = NodeType::RESERVOIR;
@@ -243,11 +230,6 @@ void GlobalConfig::Diagnose() {
                 this->n_action_nodes_from_topology++;
             }
         }
-    }
-
-
-    if(this->use_reservoir_curve && this->use_reservoir_geometry) {
-        LOG_ERR("You cannot use both RESERVOIR_CURVE and RESERVOIR_GEOMETRY in the topology file " + this->topologyfile + " please revisit input");
     }
 
 
