@@ -30,6 +30,9 @@ SOFTWARE.
 #ifndef _HERSS_H
 #define _HERSS_H
 
+// Compatibility header for cppyy and legacy C++ clients. Keep this parseable
+// until a tagged release explicitly moves downstream users to a replacement API.
+
 #include <string>
 #include <stdlib.h>
 #include <fstream>

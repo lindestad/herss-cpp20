@@ -11,7 +11,7 @@ and simulation time.
 
 ----------------------------------------------------- HOW TO USE -------------------------------------------------------
 The test is run from the src folder by "make test". The test requires the testing scripts and utahps_test to be included
-in the src_tests. In total, 99 tests are created.
+in the src_tests. In total, 101 tests are created.
 
 -------------------------------------------------- COMPONENT TESTS -----------------------------------------------------
 Below is a quick explanation of the tests implemented for each component. Other minor tests may be implemented without

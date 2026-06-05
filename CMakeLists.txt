@@ -122,6 +122,11 @@ if(BUILD_TESTING)
     target_link_libraries(herss_module_smoke PRIVATE herss_module)
     add_test(NAME HerssModuleSmoke COMMAND herss_module_smoke)
 
+    add_executable(herss_header_compat_smoke src_tests/header_compat_smoke.cpp)
+    target_link_libraries(herss_header_compat_smoke PRIVATE herss_core)
+    target_include_directories(herss_header_compat_smoke PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    add_test(NAME HerssHeaderCompatSmoke COMMAND herss_header_compat_smoke)
+
     if(HERSS_ENABLE_CPPYY_TEST)
         find_program(HERSS_CPPYY_PYTHON
             NAMES python3.12 python3.13 python3
