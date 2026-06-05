@@ -50,7 +50,12 @@ add_library(herss_module)
 target_sources(herss_module
     PUBLIC
         FILE_SET CXX_MODULES
-        FILES src/herss.cppm
+        FILES
+            src/herss.cppm
+            src/herss.config.cppm
+            src/herss.dataset.cppm
+            src/herss.scenario.cppm
+            src/herss.riversystem.cppm
 )
 target_link_libraries(herss_module PUBLIC herss_core)
 target_include_directories(herss_module PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
