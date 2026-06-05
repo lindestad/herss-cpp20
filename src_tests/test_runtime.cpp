@@ -1,7 +1,7 @@
 // Full program runtime performance test.
 // This now measures the wall-clock time of launching the compiled executable
 // (process start, config read, dataset load, simulation, output writing, teardown)
-// similar to invoking:  ./herss.exe ./global.txt
+// similar to invoking:  ./herss ./global.txt
 
 #include <gtest/gtest.h>
 #include "test_paths.h"
@@ -23,7 +23,7 @@ TEST(PerformanceTestFullProgram, Utahps_FullProgramAverageRuntimeUnder350ms) {
     const double kMaxAvgSeconds = 0.75; 
 
     if (!std::filesystem::exists(kExePath)) {
-        GTEST_SKIP() << "Executable '" << kExePath << "' not found. Build herss.exe before running this test.";
+        GTEST_SKIP() << "Executable '" << kExePath << "' not found. Build herss before running this test.";
     }
     if (!std::filesystem::exists(kGlobalPath)) {
         GTEST_SKIP() << "Global config file '" << kGlobalPath << "' not found.";

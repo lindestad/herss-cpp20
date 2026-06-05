@@ -57,7 +57,7 @@ target_compile_features(herss_module PUBLIC cxx_std_20)
 
 add_executable(herss_cli src/main.cpp)
 target_link_libraries(herss_cli PRIVATE herss_core)
-set_target_properties(herss_cli PROPERTIES OUTPUT_NAME herss.exe)
+set_target_properties(herss_cli PROPERTIES OUTPUT_NAME herss)
 
 foreach(target IN ITEMS herss_core herss_shared herss_module herss_cli)
     target_compile_options(${target} PRIVATE
@@ -87,6 +87,7 @@ if(BUILD_TESTING)
         src_tests/test_channel.cpp
         src_tests/test_dataset.cpp
         src_tests/test_globalconfig.cpp
+        src_tests/test_golden_output.cpp
         src_tests/test_interop.cpp
         src_tests/test_line.cpp
         src_tests/test_powerstation.cpp
@@ -99,6 +100,7 @@ if(BUILD_TESTING)
 
     add_executable(herss_tests ${HERSS_TEST_SOURCES})
     target_link_libraries(herss_tests PRIVATE herss_core GTest::gtest_main)
+    add_dependencies(herss_tests herss_cli)
     target_include_directories(herss_tests PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src_tests
@@ -106,6 +108,7 @@ if(BUILD_TESTING)
     target_compile_definitions(herss_tests PRIVATE
         HERSS_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/src_tests/utahps_test"
         HERSS_TEST_EXECUTABLE="$<TARGET_FILE:herss_cli>"
+        HERSS_TEST_REFERENCE_OUTPUT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/src_tests/utahps_test/reference_output"
     )
 
     include(GoogleTest)

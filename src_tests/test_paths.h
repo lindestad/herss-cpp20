@@ -9,7 +9,11 @@
 #endif
 
 #ifndef HERSS_TEST_EXECUTABLE
-#define HERSS_TEST_EXECUTABLE "./herss.exe"
+#define HERSS_TEST_EXECUTABLE "./herss"
+#endif
+
+#ifndef HERSS_TEST_REFERENCE_OUTPUT_DIR
+#define HERSS_TEST_REFERENCE_OUTPUT_DIR "../src_tests/utahps_test/reference_output"
 #endif
 
 inline std::string herssTestDataDir()
@@ -30,6 +34,11 @@ inline std::string herssTestOutputDir()
 inline std::string herssTestExecutablePath()
 {
     return std::filesystem::path(HERSS_TEST_EXECUTABLE).string();
+}
+
+inline std::string herssTestReferenceOutputDir()
+{
+    return std::filesystem::path(HERSS_TEST_REFERENCE_OUTPUT_DIR).string();
 }
 
 #endif

@@ -5,7 +5,7 @@ This plan keeps the current in-memory data structure interoperable while moving 
 ## Baseline
 
 - The current build path is `src/Makefile`.
-- `make all` builds `herss.exe` and `herss.so`.
+- `make all` builds `herss` and `herss.so`.
 - `make test` currently depends on `/usr/src/gtest` and fails when that system package is missing.
 - The main public surface is the aggregate header `src/herss.h`.
 - The interop-sensitive structure is the current `Riversystem`/`Node` graph:

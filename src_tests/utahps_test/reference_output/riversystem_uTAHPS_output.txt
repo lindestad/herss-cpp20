@@ -1,0 +1,39 @@
+Riversystem uTAHPS
+Node Idnr Nodename          Nodetype int Nodetypename Remaining_Mm3
+Node  0 HJELLE               Nodetype 0  RESERVOIR             9.8153 
+Node  1 SVOLETJONN           Nodetype 1  PSTATION              0.0000 
+Node  2 VANAROSEN            Nodetype 2  CHANNEL               0.0560 
+Node  3 GRESSE               Nodetype 0  RESERVOIR             156.6840 
+Node  4 GRONANI              Nodetype 2  CHANNEL               0.0000 
+Node  5 TOPPSY               Nodetype 0  RESERVOIR             382.3706 
+Node  6 SVEIGSHYL_I          Nodetype 1  PSTATION              0.0000 
+Node  7 SVEIGSHYL_II         Nodetype 1  PSTATION              0.0000 
+Node  8 DALSANA              Nodetype 2  CHANNEL               0.1954 
+Node  9 KROKNESVATN          Nodetype 0  RESERVOIR             216.5328 
+Node 10 EASTER               Nodetype 1  PSTATION              0.0000 
+Node 11 HYNNEKLEIV           Nodetype 2  CHANNEL               0.0282 
+-------------------------------------------
+GLOBAL WATERBALANCE
+start_water_Mm3   = 766.064100
+inflow_volume_Mm3 = 0.098064
+outflow_Mm3       = 0.479808
+end_water_Mm3     = 765.682356
+waterbalance      = 0.000000
+Note that there might be dead water below LRW in the system
+-------------------------------------------
+Average_price_Euro           = 681.181
+RestPrice_Euro               = 100.000
+tot_remaining_Mm3            = 765.682
+tot_active_remaining_Mm3     = 0.000
+tot_remaining_MWh            = 74691.596
+tot_remaining_Euro           = 7469159.628
+Sum_Production_MWh           = 451.468
+tot_income_Euro              = 307101.674
+Avg_achieved_price_E_MWh     = 680.229
+sum_qmin_cost_Euro           = 0.000
+sum_lrw_cost_Euro            = 0.000
+sum_startstopcost_Euro       = 4.000
+sum_max_adjustment_cost      = 0.000
+tot_cost_Euro                = 4.000
+tot_profit_Euro              = 307097.674
+valuefunction_Euro           = 7776257.302

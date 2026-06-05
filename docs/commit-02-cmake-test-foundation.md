@@ -6,7 +6,7 @@
 - Builds now expose:
   - `herss_core`: reusable static library without `main`.
   - `herss_shared`: shared HERSS library.
-  - `herss_cli`: command-line executable named `herss.exe`.
+  - `herss_cli`: command-line executable named `herss`.
   - `herss_tests`: GoogleTest-based test executable.
 - Added `src_tests/test_paths.h` so tests can locate fixtures and the executable from CTest.
 - GoogleTest is fetched by CMake instead of requiring `/usr/src/gtest`.

@@ -6,7 +6,7 @@
 #include <iomanip>
 #include <memory>
 
-// This test mirrors running: ./herss.exe ./global.txt (using the uTAHPS test dataset)
+// This test mirrors running: ./herss ./global.txt (using the uTAHPS test dataset)
 // and verifies that the computed value function matches a known reference value.
 // Reference value provided: 7759325.85235 (Euro)
 // We allow a small tolerance to account for floating point rounding.

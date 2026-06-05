@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
         cout << "# VERSION: " << VERSION << endl;
         cout << "# VERSION_DATE: " << VERSION_DATE << endl;
         cout << "# Not correct number of commandline arguments\n";
-        cout << "# USAGE:  herss.exe globalconfigfile.txt \n";
+        cout << "# USAGE:  herss globalconfigfile.txt \n";
         cout << "#################################################################\n";
         exit(EXIT_FAILURE);
     }

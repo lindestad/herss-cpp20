@@ -11,7 +11,7 @@ and simulation time.
 
 ----------------------------------------------------- HOW TO USE -------------------------------------------------------
 The test is run from the src folder by "make test". The test requires the testing scripts and utahps_test to be included
-in the src_tests. In total, 98 tests are created.
+in the src_tests. In total, 99 tests are created.
 
 -------------------------------------------------- COMPONENT TESTS -----------------------------------------------------
 Below is a quick explanation of the tests implemented for each component. Other minor tests may be implemented without
@@ -75,4 +75,7 @@ The tests check the correctness of:
 - Checks two reservoirs to ensure changes in src does not impact the method used to calculate water volume in the reservoirs
 
 # Runtime test
-- Runs utahps_test 30 times to check that the average simulation time does not exceed 0.3 seconds
+- Runs utahps_test repeatedly through the compiled executable and checks the average runtime
+
+# Golden output test
+- Runs the compiled executable on utahps_test and compares generated output files against the reference output

@@ -16,7 +16,7 @@ OBJ  =  main.o node.o globalconfig.o line.o reservoir.o dataset.o qmin.o \
 		powerstation.o channel.o riversystem.o scenario.o herss.o arraycurve.o \
 		xtime.o topoparser.o logger.o cascadedreservoirs.o
 INCS =  -I.
-BIN  = herss.exe
+BIN  = herss
 LIB = herss.so
 
 # TESTS
@@ -27,7 +27,7 @@ TEST_OBJ = $(filter-out main.o, $(OBJ)) $(TEST_OBJ_FILES)
 GTEST_DIR = /usr/src/gtest
 
 # Memory check with Valgrind
-# valgrind --leak-check=full --show-leak-kinds=all ../herss.exe global_utahps_hourly.txt
+# valgrind --leak-check=full --show-leak-kinds=all ../herss global_utahps_hourly.txt
 
 # Optimize for speed using O3 flag.
 # CFLAGS = $(INCS) -Wall -O3
@@ -62,11 +62,11 @@ RM = rm -f
 .PHONY: all all-before all-after clean clean-custom
 all: all-before ${BIN} ${LIB} all-after
 clean:
-	 ${RM} ${OBJ} *.core *.so *.stackdump *~ *.exe $(TEST_OBJ_FILES)
+	 ${RM} ${OBJ} *.core *.so *.stackdump *~ *.exe $(BIN) $(TEST_OBJ_FILES)
 all-clean: clean
 	${RM} ${BIN}
 
-# This makes herss.exe
+# This makes herss
 $(BIN): $(OBJ)
 	$(CC) $(OBJ) -o ${BIN} ${CFLAGS}
 
