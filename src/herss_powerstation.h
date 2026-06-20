@@ -20,8 +20,10 @@ struct Generator {
         std::vector<double> turb_virkn_psnt;    // Turbine efficiency curve psnt values
         ArrayCurve eff_curve;
         std::vector<double> action;             // Actions for this generator
-        double headlosscoef;                    // Head loss coefficient for this generator/penstock
-        double max_discharge;                   // Maximum discharge for this generator
+        double headlosscoef = 0.0;              // Head loss coefficient for this generator/penstock
+        double max_discharge = 0.0;             // Maximum discharge for this generator
+        double uniform_normalized_curve[N_UNIFORM_EFF_CURVE_POINTS] = {};
+        bool use_uniform_normalized_curve = false;
     };
 
 class Powerstation: public Node {
@@ -61,6 +63,7 @@ class Powerstation: public Node {
     int WriteStateFile(FILE *fp);
     double CalcAdjustmenCosts(void); // Only for Powerstation
     void ValidatePowerstationSettings();  // We check if the settings for the powerstation are valid. For example, that the number of generators is not higher than the maximum allowed, and that the headloss coefficient is not negative.
+    double calcEfficiency(size_t gen_idx, double q_m3s);  // Calculate the efficiency for a specific generator and discharge.
 
 };
 

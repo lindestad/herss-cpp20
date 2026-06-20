@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 
 
-EXPECTED_VALUE_FUNCTION = 7776257.30184
+EXPECTED_VALUE_FUNCTION = 7776255.82105
 
 
 def write_global_file(path: Path, input_dir: Path, output_dir: Path) -> None:

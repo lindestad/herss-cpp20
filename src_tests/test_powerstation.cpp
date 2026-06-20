@@ -114,7 +114,7 @@ protected:
             scenario->month[t] = dataset->month[t];
             scenario->day[t] = dataset->day[t];
             scenario->hour[t] = dataset->hour[t];
-            scenario->up_inflow[t] = 0.0;
+            scenario->up_inflow[t] = 1000.0;
             scenario->inflow[t] = 0.0;
             scenario->dt = gc->dt; // Will be updated per timestep in simulation
         }
@@ -168,7 +168,7 @@ protected:
             scenario->month[t] = dataset->month[t];
             scenario->day[t] = dataset->day[t];
             scenario->hour[t] = dataset->hour[t];
-            scenario->up_inflow[t] = 0.0;
+            scenario->up_inflow[t] = 1000.0;
             scenario->inflow[t] = 0.0;
             scenario->dt = gc->dt;
         }
@@ -222,7 +222,7 @@ protected:
             scenario->month[t] = dataset->month[t];
             scenario->day[t] = dataset->day[t];
             scenario->hour[t] = dataset->hour[t];
-            scenario->up_inflow[t] = 0.0;
+            scenario->up_inflow[t] = 1000.0;
             scenario->inflow[t] = 0.0;
             scenario->dt = gc->dt;
         }
@@ -286,7 +286,7 @@ protected:
             scenario->month[t] = dataset->month[t];
             scenario->day[t] = dataset->day[t];
             scenario->hour[t] = dataset->hour[t];
-            scenario->up_inflow[t] = 0.0;
+            scenario->up_inflow[t] = 1000.0;
             scenario->inflow[t] = 0.0;
             scenario->dt = gc->dt;
         }
@@ -434,6 +434,21 @@ TEST_F(PowerstationTest, Svoletjonn_OptimalEfficiency_MaxPowerPerFlow)
     EXPECT_EQ(result, 0);
     EXPECT_NEAR(powerstation->S->tot_outflow[0], 3.0, 0.001);
     EXPECT_GT(powerstation->S->Power[0], 0.6); // Should be efficient power production
+}
+
+TEST_F(PowerstationTest, UniformNormalizedCurveInterpolatesEfficiency)
+{
+    setupSvoletjonn();
+
+    Generator& generator = powerstation->generators[0];
+    generator.use_uniform_normalized_curve = true;
+    generator.max_discharge = 10.0;
+    for (size_t p = 0; p < N_UNIFORM_EFF_CURVE_POINTS; ++p) {
+        generator.uniform_normalized_curve[p] = static_cast<double>(p * 10);
+    }
+
+    EXPECT_NEAR(powerstation->calcEfficiency(0, 5.0), 0.50, 0.000001);
+    EXPECT_NEAR(powerstation->calcEfficiency(0, 10.0), 1.00, 0.000001);
 }
 
 // Head Loss and Hydraulic Tests
@@ -630,7 +645,7 @@ TEST_F(PowerstationTest, GetTunnelFLow_AggressiveAction_Penalty)
     
     double flow = powerstation->GetTunnelFLow(0);
     
-    EXPECT_EQ(flow, 0.0); // Should be shut down
+    EXPECT_NEAR(flow, MACRO_Mm3_2_m3s(powerstation->up_res_Mm3, powerstation->S->dt), 1e-12);
     EXPECT_GT(powerstation->aggressive_actions_cost, 0.0); // Should have penalty
 }
 

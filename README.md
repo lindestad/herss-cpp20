@@ -3,14 +3,16 @@
 > The only correct mainline version is [berntmath/herss](https://github.com/berntmath/herss).
 > All credit for HERSS goes to Bernt Viggo Matheussen.
 
-Project:      The Hydraulic Economic River System Simulator (HERSS)
+Project:        The Hydraulic Economic River System Simulator (HERSS)
 
-Filename:     README.md
+Filename:       README.md
 
-Startdate:	  April, 2024
-Last update:  May, 2026
+Startdate:      April, 2024
+Last update:    June 10, 2026
 
-Developer:    Bernt Viggo Matheussen (Bernt.Viggo.Matheussen@aenergi.no)
+Lead developer: Bernt Viggo Matheussen (Bernt.Viggo.Matheussen@aenergi.no)
+
+Contributors:   Ove Arstad, Terje Sandø, Kim Ly, Daniel Lindestad, Jonas Land, Daniel Grønn
 
 Organization: Å Energi, www.ae.no
 

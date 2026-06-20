@@ -20,11 +20,12 @@ protected:
     res.nodename = "TEST_RES";
 
         // Simple reservoir curve: masl->[Mm3]
-        // 100->0, 110->10, 120->25 (non-linear spacing)
-        res.nr_points_res_curve = 3;
+        // 100->0, 110->10, 120->25, 130->40 (non-linear spacing)
+        res.nr_points_res_curve = 4;
         res.res_curve_masl[0] = 100.0; res.res_curve_Mm3[0] = 0.0;
         res.res_curve_masl[1] = 110.0; res.res_curve_Mm3[1] = 10.0;
         res.res_curve_masl[2] = 120.0; res.res_curve_Mm3[2] = 25.0;
+        res.res_curve_masl[3] = 130.0; res.res_curve_Mm3[3] = 40.0;
 
     // Overflow curve: start at LRW (100 masl) and extend beyond HRW to avoid edge issues
         res.nr_points_ovefl_curve = 3;
@@ -34,6 +35,7 @@ protected:
 
         // Levels and penalties
         res.use_reservoir_curve = true;
+        res.use_overflow_curve = true;
         res.res_LRW = 100.0;
         res.res_HRW = 120.0;
         res.res_penalty = 10.0;

@@ -108,6 +108,19 @@ TEST_F(ArrayCurveTest, X2YHandlesBoundaryConditions)
     EXPECT_NEAR(result_max, 90.0, 15.0);
 }
 
+TEST_F(ArrayCurveTest, X2YHandlesExactUpperBoundary)
+{
+    curve->nr_pts = 2;
+    curve->x_points[0] = 0.0;
+    curve->x_points[1] = 10.0;
+    curve->y_points[0] = 0.0;
+    curve->y_points[1] = 100.0;
+
+    curve->initializeArrays();
+
+    EXPECT_DOUBLE_EQ(curve->x2y(10.0), 100.0);
+}
+
 // Test: x2y returns error value on out-of-bounds input
 TEST_F(ArrayCurveTest, X2YReturnsErrorOnOutOfBoundsInput)
 {

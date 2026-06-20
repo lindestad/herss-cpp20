@@ -239,6 +239,10 @@ int Herss::prepaireSimulation(Dataset *data) {
                     for (size_t t = 0; t < data->stps; ++t) {
                         res->S->action[t][res->idnr] = data->action[t][col_idx];
                     }
+                } else {
+                    for (size_t t = 0; t < data->stps; ++t) {
+                        res->S->action[t][res->idnr] = 0.0;
+                    }
                 }
             }
         }
@@ -269,12 +273,13 @@ int Herss::prepaireSimulation(Dataset *data) {
                 
                     // Fill the generators action vector for all timesteps
                     ps->generators[g].action.clear();
-                for (size_t t = 0; t < data->stps; ++t) {
-                    ps->generators[g].action.push_back(data->action[t][col_idx]);
+                    for (size_t t = 0; t < data->stps; ++t) {
+                        ps->generators[g].action.push_back(data->action[t][col_idx]);
+                    }
                 }
             }
         }
-    }} else {
+    } else {
         // If no action file data, initialize generator action vectors with zeros 
         for (size_t n = 0; n < gc->nr_nodes; ++n) {
             Node* node = rs->nodes[n];

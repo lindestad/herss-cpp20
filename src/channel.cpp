@@ -186,8 +186,9 @@ int Channel::ReadNodeData(string filename) {
                 str_name = line_obj.extractNextElementFromLine(&line);
                 str_downstream_node = line_obj.extractNextElementFromLine(&line);
 
-                this->downstream_idnr = atoi(str_downstream_node.c_str() );
-                if(this->downstream_idnr >= 0) {
+                const int tmp_downstream_idnr = atoi(str_downstream_node.c_str());
+                if(tmp_downstream_idnr >= 0) {
+                    this->downstream_idnr = tmp_downstream_idnr;
                     downstream_node_in_use = true;
                 } else {
                     downstream_node_in_use = false;

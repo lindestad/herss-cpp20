@@ -65,6 +65,7 @@ class Reservoir: public Node {
     double res_curve_Mm3[MAX_NR_POINTS_CURVE];
     size_t nr_points_res_curve;
 
+    bool use_overflow_curve; // If true, we use the overflow curve for calculating the overflow.
     double ovefl_curve_masl[MAX_NR_POINTS_CURVE];
     double ovefl_curve_m3s[MAX_NR_POINTS_CURVE];
     size_t nr_points_ovefl_curve;

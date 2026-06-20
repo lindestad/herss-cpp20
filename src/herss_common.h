@@ -28,8 +28,8 @@ This software is released under the MIT license.
 using namespace std;
 
 // BVM May 2026, we start using the version convention MAJOR.MINOR.PATCH
-const string VERSION = "3.1.02";
-const string VERSION_DATE = "20260605";
+const string VERSION = "3.1.03";
+const string VERSION_DATE = "20260611";
 
 // Maximum number of nodes allowed. // to save coding
 #define MAX_NR_NODES 30
@@ -78,6 +78,9 @@ const std::string DEFAULT_STRING_INIT = "ERROR_STR_NOT_INIT";
 #define MAX_NR_GENERATORS 6
 
 #define MAX_NR_CASCADED_RESERVOIRS 10
+
+#define N_UNIFORM_EFF_CURVE_POINTS 11
+#define HERSS_AGGRESSIVE_ACTIONS_COST 1000
 
 /////////////////////////////////////////////////////////////////
 #define MACRO_m3s_2_Mm3(q, dt) q*dt/1000000.0

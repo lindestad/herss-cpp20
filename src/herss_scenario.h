@@ -70,6 +70,7 @@ public:
     double *cost_lrw;
     double *cost_fake_lrw;
     double *adjust_cost;
+    double *cost_aggressive_actions;
 
     double *Hbrutto;  // Hydraulic head brutto
     double *Hnetto;   // Hydraulic head netto
@@ -110,6 +111,7 @@ private:
     std::vector<double> cost_lrw_storage;
     std::vector<double> cost_fake_lrw_storage;
     std::vector<double> adjust_cost_storage;
+    std::vector<double> cost_aggressive_actions_storage;
     std::vector<double> Hbrutto_storage;
     std::vector<double> Hnetto_storage;
     std::vector<double> Power_storage;

@@ -59,6 +59,7 @@ Scenario::Scenario(){
     cost_lrw = nullptr;
     cost_fake_lrw = nullptr;
     adjust_cost = nullptr;
+    cost_aggressive_actions = nullptr;
     Hbrutto = nullptr;
     Hnetto = nullptr;
     Power = nullptr;
@@ -135,6 +136,7 @@ Scenario::Scenario(size_t stps, size_t dt, size_t idnr){
         cost_lrw = init_double(cost_lrw_storage, NOT_INIT);
         cost_fake_lrw = init_double(cost_fake_lrw_storage, NOT_INIT);
         adjust_cost = init_double(adjust_cost_storage, 0.0);
+        cost_aggressive_actions = init_double(cost_aggressive_actions_storage, 0.0);
         Hbrutto = init_double(Hbrutto_storage, NOT_INIT);
         Hnetto = init_double(Hnetto_storage, NOT_INIT);
         Power = init_double(Power_storage, NOT_INIT);
@@ -188,5 +190,6 @@ Scenario::~Scenario(){
     auto_qmin_m3s = nullptr;
     channel_storage_Mm3 = nullptr;
     adjust_cost = nullptr;
+    cost_aggressive_actions = nullptr;
 }
 ///////////////////////////////////////////////////////////////////////////////

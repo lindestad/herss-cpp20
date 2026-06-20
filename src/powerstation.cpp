@@ -23,8 +23,8 @@ Powerstation::Powerstation(){
     powstat_startstop       = -1.0 * NOT_INIT;
     init_Power              = -1.0 * NOT_INIT;
     aggressive_actions_cost = -1.0 * NOT_INIT;
-
-    // WIP 
+    shared_penstock         = false;
+    nr_generators           = 0;
     
 }
 
@@ -69,6 +69,60 @@ void Powerstation::ValidatePowerstationSettings() {
 
 }
 ////////////////////////////////////////////////////////////////
+double Powerstation::calcEfficiency(size_t gen_idx, double q_m3s) {
+    if(gen_idx >= generators.size()) {
+        LOG_ERR("ERROR: Generator index out of bounds in powerstation "
+            + std::to_string(int(idnr)) + " (" + nodename + ")");
+        return 0.0;
+    }
+
+    Generator& generator = generators[gen_idx];
+
+    if(q_m3s < -0.000001) {
+        LOG_WARN("ERROR: Discharge is negative for generator " + std::to_string(gen_idx)
+            + " in powerstation " + std::to_string(int(idnr)) + " (" + nodename
+            + "): Q = " + std::to_string(q_m3s));
+        LOG_ERR("Check your action file, and make sure the discharge is not negative");
+    }
+
+    if(q_m3s < 0.000001) {
+        return 0.0;
+    }
+
+    if(q_m3s > generator.max_discharge * 1.000001) {
+        LOG_WARN("ERROR: Discharge is above maximum for generator " + std::to_string(gen_idx)
+            + " in powerstation " + std::to_string(int(idnr)) + " (" + nodename
+            + "): Q = " + std::to_string(q_m3s)
+            + ", max_discharge = " + std::to_string(generator.max_discharge));
+        LOG_ERR("Check your action file, and make sure the discharge is not above the generator maximum discharge");
+    }
+
+    if(generator.use_uniform_normalized_curve) {
+        if(generator.max_discharge <= 0.0) {
+            LOG_ERR("ERROR: Generator max discharge must be positive for UNIFORM_NORMALIZED_CURVE in powerstation "
+                + std::to_string(int(idnr)) + " (" + nodename + ")");
+        }
+
+        double q_normalized = q_m3s / generator.max_discharge;
+        if(q_normalized <= 0.0) {
+            return generator.uniform_normalized_curve[0] / 100.0;
+        }
+        if(q_normalized >= 1.0) {
+            return generator.uniform_normalized_curve[N_UNIFORM_EFF_CURVE_POINTS - 1] / 100.0;
+        }
+
+        double scaled = q_normalized * (N_UNIFORM_EFF_CURVE_POINTS - 1);
+        int idx = int(scaled);
+        double fraction = scaled - idx;
+
+        double eta = generator.uniform_normalized_curve[idx]
+            + fraction * (generator.uniform_normalized_curve[idx + 1] - generator.uniform_normalized_curve[idx]);
+        return eta / 100.0;
+    }
+
+    return generator.eff_curve.x2y(q_m3s) / 100.0;
+}
+////////////////////////////////////////////////////////////////
 int Powerstation::Simulate(size_t t) {
 
     // CHANGE BY OVE: Initialize all parameters as 0.0
@@ -107,6 +161,17 @@ int Powerstation::Simulate(size_t t) {
         }
     }
 
+    if (total_Q > S->up_inflow[t] * 1.000001) {
+        LOG_WARN("Aggressive actions " + std::to_string(total_Q) + " m3/s exceeds inflow "
+            + std::to_string(S->up_inflow[t]) + " m3/s at timestep "
+            + std::to_string(t) + " for node " + std::to_string(int(idnr)) + " (" + nodename + ")");
+        const double scale = total_Q > 0.0 ? std::max(0.0, S->up_inflow[t]) / total_Q : 0.0;
+        total_Q = 0.0;
+        for (size_t g = 0; g < generators.size(); ++g) {
+            Q_gen[g] *= scale;
+            total_Q += Q_gen[g];
+        }
+    }
 
     // BVM May 2026. 
     // At some point revisit this to check if we hsould use the minimum discharge as a hard constrain or soft constrain. 
@@ -133,7 +198,7 @@ int Powerstation::Simulate(size_t t) {
         for (size_t g = 0; g < generators.size(); ++g) {
             Q = Q_gen[g];
             
-            turbine_efficiency = generators[g].eff_curve.x2y(Q) / 100.0;
+            turbine_efficiency = calcEfficiency(g, Q);
             
             if(turbine_efficiency < 0.0) {
                 LOG_WARN("ERROR:  Turbine efficiency is not working properly \n");
@@ -168,7 +233,7 @@ int Powerstation::Simulate(size_t t) {
             Hnetto   = Hbrutto - headloss; 
             //printf("Separate penstock: Q = %.3f, headloss = %.3f\n", Q, headloss);
 
-            turbine_efficiency = generators[g].eff_curve.x2y(Q) / 100.0;
+            turbine_efficiency = calcEfficiency(g, Q);
 
             
             if(turbine_efficiency < 0.0) {
@@ -248,7 +313,8 @@ int Powerstation::Simulate(size_t t) {
     S->Power[t]            = total_Power;
     S->EstimatedEEKV[t]    = est_eekv;
     S->startStopCost[t]    = startstopCost;
-    S->adjust_cost[t]      = aggressive_actions_cost;
+    S->adjust_cost[t]      = 0.0;
+    S->cost_aggressive_actions[t] = aggressive_actions_cost;
     S->tot_outflow[t]      = total_Q;
     S->inflow[t]           = 0.0;  
 
@@ -419,44 +485,67 @@ int Powerstation::ReadNodeData(string filename) {
                             value   = line_obj.extractNextElementFromLine(&line);
                             gen_data_lines++;
 
-                            if(keyword != "TURBINE_CURVE") {
-                                LOG_ERR("ERROR: Expected TURBINE_CURVE for generator " + to_string(g));
-                            }
+                            if(keyword == "UNIFORM_NORMALIZED_CURVE") {
+                                if(atoi(value.c_str()) != N_UNIFORM_EFF_CURVE_POINTS) {
+                                    LOG_ERR("ERROR: Expected " + to_string(N_UNIFORM_EFF_CURVE_POINTS)
+                                        + " points for UNIFORM_NORMALIZED_CURVE for generator " + to_string(g));
+                                }
 
+                                generators[g].use_uniform_normalized_curve = true;
+                                for (size_t p = 0; p < N_UNIFORM_EFF_CURVE_POINTS; ++p) {
+                                    line = gc->topoparser.getLine(gen_data_lines);
+                                    keyword = line_obj.extractNextElementFromLine(&line);
+                                    value   = line_obj.extractNextElementFromLine(&line);
+                                    generators[g].uniform_normalized_curve[p] = atof(value.c_str());
+                                    gen_data_lines++;
+                                }
 
-                            size_t n_points = size_t(atoi(value.c_str()));
-                            generators[g].turb_virkn_Q.resize(n_points);
-                            generators[g].turb_virkn_psnt.resize(n_points);
-                            
-
-                            for (size_t p = 0; p < n_points; ++p) {
                                 line = gc->topoparser.getLine(gen_data_lines);
                                 keyword = line_obj.extractNextElementFromLine(&line);
                                 value   = line_obj.extractNextElementFromLine(&line);
-                                generators[g].turb_virkn_Q[p]    = atof(keyword.c_str());
-                                generators[g].turb_virkn_psnt[p] = atof(value.c_str());
                                 gen_data_lines++;
-                            }
 
+                                if(keyword != "GENERATOR_MAX_DISCHARGE") {
+                                    LOG_INFO("Powerstation::ReadNodeData   nodename: " + nodename + ", idnr: " + std::to_string(int(idnr)) + ", nodetype: " + EnumToString(nodetype));
+                                    LOG_WARN("Powerstation::ReadNodeData   nodename: " + nodename + ", idnr: " + std::to_string(int(idnr)) + ", nodetype: " + EnumToString(nodetype));
+                                    LOG_ERR("ERROR: Expected GENERATOR_MAX_DISCHARGE for generator " + to_string(g));
+                                }
+                                generators[g].max_discharge = atof(value.c_str());
+                            } else if(keyword == "TURBINE_CURVE") {
+                                size_t n_points = size_t(atoi(value.c_str()));
+                                generators[g].turb_virkn_Q.resize(n_points);
+                                generators[g].turb_virkn_psnt.resize(n_points);
 
-                            generators[g].eff_curve.nr_pts = n_points;
-                            for (size_t p = 0; p < n_points; ++p) {
-                                generators[g].eff_curve.x_points[p] = generators[g].turb_virkn_Q[p];
-                                generators[g].eff_curve.y_points[p] = generators[g].turb_virkn_psnt[p];
-                            }
-                            generators[g].eff_curve.initializeArrays();
+                                for (size_t p = 0; p < n_points; ++p) {
+                                    line = gc->topoparser.getLine(gen_data_lines);
+                                    keyword = line_obj.extractNextElementFromLine(&line);
+                                    value   = line_obj.extractNextElementFromLine(&line);
+                                    generators[g].turb_virkn_Q[p]    = atof(keyword.c_str());
+                                    generators[g].turb_virkn_psnt[p] = atof(value.c_str());
+                                    gen_data_lines++;
+                                }
 
-                            line = gc->topoparser.getLine(gen_data_lines);
-                            keyword = line_obj.extractNextElementFromLine(&line);
-                            value   = line_obj.extractNextElementFromLine(&line);
-                            gen_data_lines++;
-                            
-                            if(keyword != "GENERATOR_MAX_DISCHARGE") {
-                                LOG_INFO("Powerstation::ReadNodeData   nodename: " + nodename + ", idnr: " + std::to_string(int(idnr)) + ", nodetype: " + EnumToString(nodetype));
-                                LOG_WARN("Powerstation::ReadNodeData   nodename: " + nodename + ", idnr: " + std::to_string(int(idnr)) + ", nodetype: " + EnumToString(nodetype));
-                                LOG_ERR("ERROR: Expected GENERATOR_MAX_DISCHARGE for generator " + to_string(g));
+                                generators[g].eff_curve.nr_pts = n_points;
+                                for (size_t p = 0; p < n_points; ++p) {
+                                    generators[g].eff_curve.x_points[p] = generators[g].turb_virkn_Q[p];
+                                    generators[g].eff_curve.y_points[p] = generators[g].turb_virkn_psnt[p];
+                                }
+                                generators[g].eff_curve.initializeArrays();
+
+                                line = gc->topoparser.getLine(gen_data_lines);
+                                keyword = line_obj.extractNextElementFromLine(&line);
+                                value   = line_obj.extractNextElementFromLine(&line);
+                                gen_data_lines++;
+
+                                if(keyword != "GENERATOR_MAX_DISCHARGE") {
+                                    LOG_INFO("Powerstation::ReadNodeData   nodename: " + nodename + ", idnr: " + std::to_string(int(idnr)) + ", nodetype: " + EnumToString(nodetype));
+                                    LOG_WARN("Powerstation::ReadNodeData   nodename: " + nodename + ", idnr: " + std::to_string(int(idnr)) + ", nodetype: " + EnumToString(nodetype));
+                                    LOG_ERR("ERROR: Expected GENERATOR_MAX_DISCHARGE for generator " + to_string(g));
+                                }
+                                generators[g].max_discharge = atof(value.c_str());
+                            } else {
+                                LOG_ERR("ERROR: Expected TURBINE_CURVE or UNIFORM_NORMALIZED_CURVE for generator " + to_string(g));
                             }
-                            generators[g].max_discharge = atof(value.c_str());
                             
                         }
                     }   
@@ -482,6 +571,15 @@ int Powerstation::ReadNodeData(string filename) {
                 LOG_ERR("ERROR: Invalid efficiency value in turbine curve for generator " + std::to_string(g) + " in powerstation " + std::to_string(int(idnr)) + " (" + nodename + "). Efficiency should be between 0 and 100.");
             }
 
+        }
+        if(generators[g].use_uniform_normalized_curve) {
+            for(size_t p = 0; p < N_UNIFORM_EFF_CURVE_POINTS; ++p) {
+                if(generators[g].uniform_normalized_curve[p] < 0.0 || generators[g].uniform_normalized_curve[p] > 100.0) {
+                    LOG_ERR("ERROR: Invalid efficiency value in uniform normalized curve for generator "
+                        + std::to_string(g) + " in powerstation " + std::to_string(int(idnr))
+                        + " (" + nodename + "). Efficiency should be between 0 and 100.");
+                }
+            }
         }
         if(generators[g].max_discharge < 0.0) {
             LOG_ERR("ERROR: Negative max discharge for generator " + std::to_string(g) + " in powerstation " + std::to_string(int(idnr)) + " (" + nodename + ")");
@@ -646,13 +744,13 @@ int Powerstation::WriteNodeOutput(GlobalConfig *gc) {
     for (size_t g = 0; g < generators.size(); ++g) {
         fprintf(fp, " [fr_g%zu]", g);
     }
-    fprintf(fp, " [m3/s] [m3/s] [Euro] [Euro] [m] [m] [MWh] [Euro] [Euro] [GWh/Mm3]\n");
+    fprintf(fp, " [m3/s] [m3/s] [m] [m] [MWh] [GWh/Mm3] [Euro] [Euro] [Euro] [Euro] [Euro] [Euro]\n");
 
     fprintf(fp, "yyyy mm dd hh Up_Inflow Price");
     for (size_t g = 0; g < generators.size(); ++g) {
         fprintf(fp, " Action_g%zu", g);
     }
-    fprintf(fp, " tot_outflow auto_qmin income startstopCost Hnetto Hbrutto Power adjust_cost profit est_eekv\n");
+    fprintf(fp, " tot_outflow auto_qmin Hnetto Hbrutto Power est_eekv income tot_cost startstopCost adjust_cost cost_aggressive_actions profit\n");
 
     for(size_t t = 0; t < this->stps; t++) {
         fprintf(fp, "%d %d %d %d ", S->year[t], S->month[t], S->day[t], S->hour[t]);
@@ -661,9 +759,12 @@ int Powerstation::WriteNodeOutput(GlobalConfig *gc) {
             double act = (generators[g].action.size() > t) ? generators[g].action[t] : -9999.0;
             fprintf(fp, " %.4f", act);
         }
-        fprintf(fp, " %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f\n",
-            S->tot_outflow[t], S->auto_qmin_m3s[t], S->income[t], S->cost[t] - S->adjust_cost[t],
-            S->Hnetto[t], S->Hbrutto[t], S->Power[t], S->adjust_cost[t], S->profit[t], S->EstimatedEEKV[t]);
+        fprintf(fp, " %.4f %.4f %.4f %.4f %.4f %.4f",
+            S->tot_outflow[t], S->auto_qmin_m3s[t], S->Hnetto[t], S->Hbrutto[t],
+            S->Power[t], S->EstimatedEEKV[t]);
+        fprintf(fp, " %.4f %.4f %.4f %.4f %.4f %.4f\n",
+            S->income[t], S->cost[t], S->startStopCost[t], S->adjust_cost[t],
+            S->cost_aggressive_actions[t], S->profit[t]);
     }
 
     fclose(fp);
@@ -709,21 +810,10 @@ double Powerstation::GetTunnelFLow(size_t t) {
 
 
 
-    // We shut down production and auto_qmin if the reservoir is dry or water level below tunnel 
-    // I think we should give a minor penalty when we run action to aggresively. Just so we dont get the same value in VF. 
+    // We shut down production and auto_qmin if the reservoir is dry or water level below tunnel.
     if (Q_Mm3 > up_res_Mm3) {
-        //printf("DEBUG: Aggressive action triggered at timestep %zu for node %d (%s)\n", t, int(idnr), nodename.c_str());
-        //printf("DEBUG: Q_Mm3 = %.6f, up_res_Mm3 = %.6f, flow = %.6f, S->dt = %ld\n", Q_Mm3, up_res_Mm3, flow, S->dt);
-        //printf("DEBUG: Action values: ");
-        //for (size_t g = 0; g < generators.size(); ++g) {
-        //    if (generators[g].action.size() > t) {
-        //        printf("g%zu=%.3f ", g, generators[g].action[t]);
-        //    }
-        //}
-        //printf("\n");
-        aggressive_actions_cost = (Q_Mm3 - up_res_Mm3) * 900000000.0;
+        aggressive_actions_cost = (Q_Mm3 - up_res_Mm3) * HERSS_AGGRESSIVE_ACTIONS_COST;
         flow = 0.0;
-
     }
 
     return flow;

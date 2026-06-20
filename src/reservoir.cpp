@@ -30,6 +30,7 @@ SOFTWARE.
 #include "herss_reservoir.h"
 #include "herss_system.h"
 #include "logger.h"
+#include <algorithm>
 #include <limits>
 
 
@@ -52,6 +53,9 @@ Reservoir::Reservoir(){
     nr_points_ovefl_curve          = 0;
     outlet_hatch_in_use            = false;
     outlet_tunnel_in_use           = false;
+    outlet_overflow_in_use         = false;
+    outlet_auto_qmin_in_use        = false;
+    use_overflow_curve             = false;
 
     minQ_hatch                     = NOT_INIT;
     maxQ_hatch                     = NOT_INIT;
@@ -103,25 +107,24 @@ int Reservoir::initArrayCurves(void) {
         ac_res_Mm3_2_masl.initializeArrays();
     }
 
+    if(use_overflow_curve) {
+        //--------------------------------------------------------------------
+        // Specify OVERFLOW_CURVE and number of points. If not used specify with "-9999"
+        ac_ovefl_masl_2_m3s.nr_pts = this->nr_points_ovefl_curve;
+        for (int p = 0; p < ac_ovefl_masl_2_m3s.nr_pts; p++){
+            ac_ovefl_masl_2_m3s.x_points[p] = ovefl_curve_masl[p];
+            ac_ovefl_masl_2_m3s.y_points[p] = ovefl_curve_m3s[p];
+        }
+        ac_ovefl_masl_2_m3s.initializeArrays();
 
-    //--------------------------------------------------------------------
-    // Specify OVERFLOW_CURVE and number of points. If not used specify with "-9999"
-    ac_ovefl_masl_2_m3s.nr_pts = this->nr_points_ovefl_curve;
-    for (int p = 0; p < ac_ovefl_masl_2_m3s.nr_pts; p++){
-        ac_ovefl_masl_2_m3s.x_points[p] = ovefl_curve_masl[p];
-        ac_ovefl_masl_2_m3s.y_points[p] = ovefl_curve_m3s[p];
+        //ArrayCurve ac_ovefl_m3s_2_masl;
+        ac_ovefl_m3s_2_masl.nr_pts = this->nr_points_ovefl_curve;
+        for (int p = 0; p < ac_ovefl_m3s_2_masl.nr_pts; p++){
+            ac_ovefl_m3s_2_masl.x_points[p] = ovefl_curve_m3s[p];
+            ac_ovefl_m3s_2_masl.y_points[p] = ovefl_curve_masl[p];
+        }
+        ac_ovefl_m3s_2_masl.initializeArrays();
     }
-    ac_ovefl_masl_2_m3s.initializeArrays();
-
-    //ArrayCurve ac_ovefl_m3s_2_masl;
-    ac_ovefl_m3s_2_masl.nr_pts = this->nr_points_ovefl_curve;
-    for (int p = 0; p < ac_ovefl_m3s_2_masl.nr_pts; p++){
-        ac_ovefl_m3s_2_masl.x_points[p] = ovefl_curve_m3s[p];
-        ac_ovefl_m3s_2_masl.y_points[p] = ovefl_curve_masl[p];
-    }
-    ac_ovefl_m3s_2_masl.initializeArrays();
-
-
 
     return 0;
 }
@@ -137,7 +140,13 @@ double Reservoir::CalcOverflow() {
     overflow_m3s = 0.0;
     overflow_Mm3 = 0.0;
 
-    masl_start_overflow = this->ovefl_curve_masl[0];
+    if(this->use_overflow_curve) {
+        masl_start_overflow = this->ovefl_curve_masl[0];
+    } else {
+        LOG_ERR("ERROR: No method for calculating overflow is specified. Node idnr = "
+            + std::to_string(int(this->idnr)) + "   nodename = " + this->nodename);
+        return 0.0;
+    }
 
     // CHANGE BY OVE: Fast overflow calculation
     if (fast_overflow) {
@@ -147,8 +156,17 @@ double Reservoir::CalcOverflow() {
         }
         return overflow_Mm3;
     } else {
-        // The bottom point in the overflow curve is usually the same as HRW, but not always.
-        if(this->res_masl > masl_start_overflow) {
+        if(this->use_overflow_curve) {
+            // The bottom point in the overflow curve is usually the same as HRW, but not always.
+            if(this->res_masl > masl_start_overflow) {
+            double masl_max_overflow = this->ovefl_curve_masl[this->nr_points_ovefl_curve - 1];
+            if(this->res_masl > masl_max_overflow) {
+                LOG_WARN("res_masl (" + std::to_string(this->res_masl)
+                    + ") is above maximum overflow curve level (" + std::to_string(masl_max_overflow) + ")");
+                LOG_ERR("Please check your overflow curve for node idnr = "
+                    + std::to_string(int(this->idnr)) + "   nodename = " + this->nodename);
+            }
+
             overflow_m3s = ac_ovefl_masl_2_m3s.x2y(this->res_masl);
             overflow_Mm3 = MACRO_m3s_2_Mm3(overflow_m3s,S->dt);
 
@@ -189,6 +207,7 @@ double Reservoir::CalcOverflow() {
                 LOG_WARN("masl_start_overflow = " + std::to_string(masl_start_overflow));
                 LOG_ERR("Node idnr = " + std::to_string(int(this->idnr)) + "   nodename = " + this->nodename );
                 return -9;
+            }
             }
         }
         return overflow_Mm3;
@@ -459,11 +478,20 @@ int Reservoir::Simulate(size_t t) {
             ptr_downstream_node_tunnel->start_of_stp_masl = this->res_HRW;
         }
 
-        ptr_downstream_node_tunnel->up_res_Mm3 = this->res_Mm3;
+        ptr_downstream_node_tunnel->up_res_Mm3 = std::max(0.0, this->res_Mm3 - this->filling_at_lrw_Mm3);
         ptr_downstream_node_tunnel->S->dt = S->dt;
         double tunnelf_m3s = ptr_downstream_node_tunnel->GetTunnelFLow(t);
         ptr_downstream_node_tunnel->S->up_inflow[t] = tunnelf_m3s;
         tunnelflow_Mm3 = MACRO_m3s_2_Mm3(tunnelf_m3s ,S->dt);  // Mm3 
+
+        if(tunnelflow_Mm3 < 0.0) {
+            LOG_WARN("Negative tunnel flow is not allowed \n");
+            LOG_WARN("tunnelf_m3s = " + std::to_string(tunnelf_m3s));
+            LOG_WARN("tunnelflow_Mm3 = " + std::to_string(tunnelflow_Mm3));
+            LOG_WARN("res_masl= " + std::to_string(this->res_masl));
+            LOG_WARN("res_HRW = " + std::to_string(this->res_HRW));
+            LOG_ERR("Node idnr = " + std::to_string(int(this->idnr)) + "   nodename = " + this->nodename );
+        }
     }
 
 
@@ -889,12 +917,16 @@ int Reservoir::ReadNodeData(string filename){
                             LOG_ERR("nr_points_ovefl_curve > MAX_NR_POINTS_CURVE ");
                         }
                         downstream_idnr_overflow = atoi(token.c_str());
-                        if(size_t(downstream_idnr_overflow) == this->idnr) {
+                        if(downstream_idnr_overflow < 0) {
+                            LOG_ERR("ERROR: downstream node idnr for OVERFLOW_CURVE must be non-negative in topologyfile " + filename);
+                        }
+                        if(downstream_idnr_overflow == int(this->idnr)) {
                             LOG_INFO("ERROR: OUTLET_OVERFLOW cannot point to itself.");
                             LOG_INFO("This can cause numerical instability and is not physical. Check topology file " + filename);
                             LOG_ERR("ERROR: OUTLET_OVERFLOW cannot point to itself. Reservoir::ReadNodeData  nodename: " + nodename + ", idnr: " + std::to_string(idnr) + ", nodetype: " + EnumToString(nodetype) + "\n");
                         }
                         this->outlet_overflow_in_use = true;
+                        this->use_overflow_curve = true;
                         for(size_t p = 0; p < nr_points_ovefl_curve; p++) {
                             line = gc->topoparser.getLine(k+p+1);
                             keyword = line_obj.extractNextElementFromLine(&line);
@@ -922,6 +954,9 @@ int Reservoir::ReadNodeData(string filename){
         downstream_node_in_use = true;
     }
 
+    if(!downstream_node_in_use) {
+        LOG_ERR("ERROR: Downstream node has to be set for reservoir. Please add a channel node downstream of the reservoir");
+    }
 
     if(this->use_reservoir_geometry) {
         // Check if we have the necessary variables to calculate the reservoir geometry.
@@ -1016,7 +1051,10 @@ int Reservoir::WriteNodeOutput(GlobalConfig *gc){
 
     sprintf (outstr, "RESERVOIR node %d %s\n", int(idnr), nodename.c_str()  );
     fprintf(fp, "%s", outstr);
-    fprintf(fp, "reservoir_init_fr= %.5f\n", this->reservoir_init_fr);
+    fprintf(fp, "reservoir_init_fr= %.5f  masl=%.3f\n", this->reservoir_init_fr, this->res_masl);
+    fprintf(fp, "Filling at HRW [Mm3] = %.5f\n", this->filling_at_hrw_Mm3);
+    fprintf(fp, "Filling at LRW [Mm3] = %.5f\n", this->filling_at_lrw_Mm3);
+    fprintf(fp, "Active reservoir capacity [Mm3] = %.5f\n", this->filling_at_hrw_Mm3 - this->filling_at_lrw_Mm3);
 
     fprintf(fp, "yyyy mm dd hh [m3/s] [Euro/MWh] [fr] [m3/s] [Mm3] [masl] [fr] [Euro]         [m3/s]     [m3/s]    [m3/s]   [m3/s]    [m3/s] \n");
     fprintf(fp, "yyyy mm dd hh Inflow Price Action Up_Inflow Res_Mm3 Res_masl Res_fr lrw_cost tunnelflow hatchflow overflow auto_qmin tot_outflow\n");

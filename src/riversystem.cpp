@@ -507,7 +507,7 @@ double Riversystem::CalcVF(double restprice) {
     for(size_t n = 0; n < nr_nodes; n++) {
         if(nodes[n]->nodetype == NodeType::PSTATION) { 
             for(size_t t = 0; t < gc->stps; t++) {
-                sum_startstopcost += nodes[n]->S->cost[t] - nodes[n]->S->adjust_cost[t];
+                sum_startstopcost += nodes[n]->S->startStopCost[t];
                 sum_max_adjustment_cost += nodes[n]->S->adjust_cost[t];
             }
         }
@@ -635,11 +635,13 @@ int Riversystem::WriteRiverSystemData(double restprice) {
 
     sum_startstopcost = 0.0;
     sum_max_adjustment_cost = 0.0;
+    double sum_aggressive_actions_cost = 0.0;
     for(size_t n = 0; n < nr_nodes; n++) {
         if(nodes[n]->nodetype == NodeType::PSTATION) { 
             for(size_t t = 0; t < gc->stps; t++) {
-                sum_startstopcost += nodes[n]->S->cost[t] - nodes[n]->S->adjust_cost[t];
+                sum_startstopcost += nodes[n]->S->startStopCost[t];
                 sum_max_adjustment_cost += nodes[n]->S->adjust_cost[t];
+                sum_aggressive_actions_cost += nodes[n]->S->cost_aggressive_actions[t];
             }
         }
     }
@@ -668,6 +670,7 @@ int Riversystem::WriteRiverSystemData(double restprice) {
     fprintf(fp, "sum_lrw_cost_Euro            = %.3f\n", sum_lrw_cost);
     fprintf(fp, "sum_startstopcost_Euro       = %.3f\n", sum_startstopcost);
     fprintf(fp, "sum_max_adjustment_cost      = %.3f\n", sum_max_adjustment_cost);
+    fprintf(fp, "sum_aggressive_actions_cost  = %.3f\n", sum_aggressive_actions_cost);
     fprintf(fp, "tot_cost_Euro                = %.3f\n", tot_cost_Euro);
     fprintf(fp, "tot_profit_Euro              = %.3f\n", tot_profit_Euro);
     fprintf(fp, "valuefunction_Euro           = %.3f\n", valuefunction_Euro);
@@ -688,6 +691,7 @@ int Riversystem::WriteRiverSystemData(double restprice) {
         printf("sum_lrw_cost_Euro            = %.3f\n", sum_lrw_cost);
         printf("sum_startstopcost_Euro       = %.3f\n", sum_startstopcost);
         printf("sum_max_adjustment_cost      = %.3f\n", sum_max_adjustment_cost);
+        printf("sum_aggressive_actions_cost  = %.3f\n", sum_aggressive_actions_cost);
         printf("tot_cost_Euro                = %.3f\n", tot_cost_Euro);
         printf("tot_profit_Euro              = %.3f\n", tot_profit_Euro);
         printf("valuefunction_Euro           = %.3f\n", valuefunction_Euro);

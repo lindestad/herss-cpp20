@@ -62,6 +62,19 @@ double ArrayCurve::initializeArrays() {
         }
     }
 
+    double xdiff = std::abs(xmax - xmin);
+    if(xdiff < 0.0001) {
+        LOG_WARN("ERROR: xdiff is too small in ArrayCurve::initializeArrays, this can lead to numerical instability. Check your curve definition. xdiff = " + std::to_string(xdiff));
+        LOG_WARN("xmin = " + std::to_string(xmin) + ", xmax = " + std::to_string(xmax));
+        LOG_ERR("Node idnr = " + std::to_string(int(current_node_idnr)) + "   nodename = " + current_node_name);
+    }
+
+    double ydiff = std::abs(ymax - ymin);
+    if(ydiff < 0.0001) {
+        LOG_WARN("ERROR: ydiff is too small in ArrayCurve::initializeArrays, this can lead to numerical instability. Check your curve definition. ydiff = " + std::to_string(ydiff));
+        LOG_ERR("Node idnr = " + std::to_string(int(current_node_idnr)) + "   nodename = " + current_node_name);
+    }
+
     // Now we normalize both axis [0,1]
     for(int i = 0; i < nr_pts; i++) {
         x_points[i]  = (x_points[i] - xmin) / (xmax - xmin);
@@ -90,16 +103,10 @@ double ArrayCurve::initializeArrays() {
 }
 ///////////////////////////////////////////////////////////////////////////
 //
-// BUG: Fix later.
-// When the flow is at maximum. We are at the upper end of the efficiency curves.
-// The current method have a numerical problem with it.
-// The quick solution is to make the curves go to a tiny fraction above max flow.
-// We have to look at this later
+// Return y from x using the curve used to initialize this lookup table.
 double ArrayCurve::x2y(double x) {
 
-    double xt = x + 0.0;
-
-    xt = (x-xmin)/(xmax-xmin);
+    double xt = (x-xmin)/(xmax-xmin);
 
     if(xt > 1.0 || xt < 0.0) {
 
@@ -119,18 +126,29 @@ double ArrayCurve::x2y(double x) {
 
     }
 
-    int idx;
-    idx = int(  0.5 +  ( xt - x_points[0]) / (x_points[nr_pts-1] - x_points[0]) * double(POINTS_IN_ARRAY)) ;
-
     if(xt < x_points[0] || xt > x_points[nr_pts-1]) {
         
         LOG_WARN("ERROR: x value is out of bounds for interpolation");
 
         printf("HOUSTON - we have a problem!\n");
         printf("x=%.3f\n", xt);
-        printf("idx = %d\n", idx);
         printf("file: %s  linenr: %d  function: %s \n", __FILE__ , __LINE__, __FUNCTION__);
         return -1.0 * VERY_LARGE_NUMBER;
+    }
+
+    double frac = (xt - x_points[0]) / (x_points[nr_pts-1] - x_points[0]);
+    if (frac < 0.0) {
+        frac = 0.0;
+    }
+    if (frac > 1.0) {
+        frac = 1.0;
+    }
+    int idx = int(frac * double(POINTS_IN_ARRAY));
+    if (idx >= POINTS_IN_ARRAY) {
+        idx = POINTS_IN_ARRAY - 1;
+    }
+    if (idx < 0) {
+        idx = 0;
     }
 
     double y;

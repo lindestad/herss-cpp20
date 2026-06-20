@@ -45,7 +45,7 @@ TEST(ValueFunctionIntegrationTest, UtahpsSystem_ComputesExpectedValueFunction) {
 			  << "[ValueFunctionIntegrationTest] uTAHPS ValueFunction = " << vf << "\n";
 
 	// Assert: compare against reference value function
-	const double kExpectedVF = 7776257.30184;
+	const double kExpectedVF = 7776255.82105;
 	// Tolerance: 1e-2 Euro (cent-level) should be sufficient; relax slightly if platform differences arise
 	EXPECT_NEAR(vf, kExpectedVF, 1e-2) << "ValueFunction mismatch for uTAHPS integration test";
 	// Internal consistency: stored valuefunction_Euro should equal returned value
