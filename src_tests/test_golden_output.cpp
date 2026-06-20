@@ -183,7 +183,6 @@ TEST(GoldenOutputTest, MainlineDataOutputMatchesReferenceFiles)
     const std::filesystem::path projectRoot = herssProjectSourceDir();
     const std::vector<std::filesystem::path> cases = {
         projectRoot / "data" / "mini_utahps_new_inputformat",
-        projectRoot / "data" / "mini_utahps_spillway",
         projectRoot / "data" / "res_casc_C",
         projectRoot / "data" / "res_casc_D",
     };

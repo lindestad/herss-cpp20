@@ -165,11 +165,9 @@ int Powerstation::Simulate(size_t t) {
         LOG_WARN("Aggressive actions " + std::to_string(total_Q) + " m3/s exceeds inflow "
             + std::to_string(S->up_inflow[t]) + " m3/s at timestep "
             + std::to_string(t) + " for node " + std::to_string(int(idnr)) + " (" + nodename + ")");
-        const double scale = total_Q > 0.0 ? std::max(0.0, S->up_inflow[t]) / total_Q : 0.0;
         total_Q = 0.0;
         for (size_t g = 0; g < generators.size(); ++g) {
-            Q_gen[g] *= scale;
-            total_Q += Q_gen[g];
+            Q_gen[g] = 0.0;
         }
     }
 

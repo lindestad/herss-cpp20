@@ -645,7 +645,7 @@ TEST_F(PowerstationTest, GetTunnelFLow_AggressiveAction_Penalty)
     
     double flow = powerstation->GetTunnelFLow(0);
     
-    EXPECT_NEAR(flow, MACRO_Mm3_2_m3s(powerstation->up_res_Mm3, powerstation->S->dt), 1e-12);
+    EXPECT_EQ(flow, 0.0); // Should be shut down
     EXPECT_GT(powerstation->aggressive_actions_cost, 0.0); // Should have penalty
 }
 
